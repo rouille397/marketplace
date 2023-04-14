@@ -3,6 +3,7 @@ import { ThirdwebProvider } from "@thirdweb-dev/react";
 import { ConfluxEspace } from "@thirdweb-dev/chains";
 import "../styles/globals.css";
 import Header from "../components/Header";
+import Head from "next/head";
 
 // This is the chainId your dApp will work on.
 function MyApp({ Component, pageProps }: AppProps) {
