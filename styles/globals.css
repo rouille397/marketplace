@@ -13,11 +13,7 @@
 
 /* Set core body defaults */
 body {
-  min-height: 100vh;
   text-rendering: optimizeSpeed;
-  line-height: 1.5;
-  --hello: -100%;
-  padding-bottom: 250px;
 }
 
 /* Inherit fonts for inputs and buttons */
@@ -35,15 +31,6 @@ select {
   --tw-color1-hover: #aba2b3;
 }
 
-body {
-  background: var(--black);
-  font-family: "Inter", sans-serif;
-  color: var(--white);
-  display: flex;
-  margin: 0;
-  text-align: center;
-}
-
-h2 {
-  font-size: 2rem;
+.walletConnectButton {
+  background: linear-gradient(272.64deg, #ff8d8d 0.86%, #7d12e7 68.2%);
 }
