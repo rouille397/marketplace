@@ -51,4 +51,26 @@ select {
   -webkit-text-fill-color: transparent;
   background-clip: text;
   font-family: "Advent Pro", sans-serif;
+  transform: translate(0%, 15px);
+}
+.nft-card:hover {
+transition: ease-in 2s;
+}
+.nft-card:hover img{
+  height: 232px;
+}
+.nft-card:hover .collect-button{
+  display: block;
+}
+/* .collect-button:hover{
+  transition: ease-in 2s;
+} */
+.nft-price {
+  background: linear-gradient(98.31deg, #ff8d8d -20.73%, #7d12e7 71.91%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.collect-button {
+  background: linear-gradient(98.31deg, #ff8d8d -20.73%, #7d12e7 71.91%);
 }

@@ -4,7 +4,7 @@ import handImage from "../../public/images/hand-image.png";
 
 const Header = () => {
   return (
-    <div className="bg-[url('/images/header-bg-img.png')] bg-cover  min-[1440px]:bg-cover bg-top bg-no-repeat  w-full h-[884px] xl:h-[884px] flex justify-center items-end relative">
+    <div className="bg-[url('/images/header-bg-img.png')] bg-cover  min-[1440px]:bg-cover bg-top bg-no-repeat  w-full h-screen xl:h-screen flex justify-center items-end relative">
       <Image src={handImage} alt="nitee conflux espace" className="relative z-[1]" />
       <h1 className="nitfee-text uppercase text-[200px] font-bold absolute top-[18%] ">NITFEE</h1>
       <h1 className="conflux-text text-[180px] font-bold absolute z-[2] top-[45%]">

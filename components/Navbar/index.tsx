@@ -20,12 +20,16 @@ const Navbar: FC = () => {
   }, []);
 
   const changeColor = () => {
-    if (window.scrollY >= 40) setColor(true);
+    if (window.scrollY >= 60) setColor(true);
     else setColor(false);
   };
 
   return (
-    <div className="flex justify-between items-center px-[78px] bg-transparent w-full fixed z-10">
+    <div
+      className={`flex justify-between items-center px-[78px] bg-transparent w-full fixed z-10 py-4 ${
+        color ? "bg-night" : ""
+      }`}
+    >
       <div className="flex items-center gap-2">
         <Image src={logo} alt="NITFEE" className="w-[72px] h-[70px] object-contain" />
         <h1 className="text-white text-[32px] font-bold uppercase">NITFEE</h1>
