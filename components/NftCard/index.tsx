@@ -1,5 +1,4 @@
 import { MediaRenderer } from "@thirdweb-dev/react";
-import Image from "next/image";
 import React, { FC } from "react";
 import Button from "../Button";
 

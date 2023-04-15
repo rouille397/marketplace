@@ -13,6 +13,7 @@ const Navbar: FC = () => {
   const connectWithMetamask = useMetamask();
   const disconnect = useDisconnect();
   const [color, setColor] = useState(false);
+  
 
   useEffect(() => {
     window.addEventListener("scroll", changeColor);

@@ -1,56 +1,122 @@
-import React, { useState, CSSProperties } from "react";
-import { useActiveListings, useContract } from "@thirdweb-dev/react";
-import Headers from "../components/HeaderV1";
-import NftCard from "../components/NftCard";
+import type { NextPage } from "next";
+import styles from "../styles/Home.module.css";
+import Link from "next/link";
+import {
+  MediaRenderer,
+  useActiveListings,
+  useActiveChain,
+  useSwitchChain,
+  useMetamask,
+  useContract,
+  ConnectWallet,
+} from "@thirdweb-dev/react";
+import { useRouter } from "next/router";
 import { marketplaceContractAddress } from "../addresses";
-import BeatLoader from "react-spinners/BeatLoader";
 
-const override: CSSProperties = {
-  display: "block",
-  margin: "0 auto",
-};
+const Home: NextPage = () => {
+  const router = useRouter();
+  const connectWithMetamask = useMetamask();
+  const { contract: marketplace } = useContract(
+    marketplaceContractAddress,
+    "marketplace"
+  );
+  const { data: listings, isLoading: loadingListings } =
+    useActiveListings(marketplace);
 
-export default function Home() {
-  const { contract } = useContract(marketplaceContractAddress, "marketplace");
-  const { data, isLoading, error } = useActiveListings(contract);
-  let [color, setColor] = useState("#ffffff");
+  const chain = useActiveChain();
 
-  console.log("data------------", data);
-
+  console.log("chain", chain?.name);
   return (
-    <div className="">
-      <Headers />
-      {/* Explore Marketplace */}
-      <div className="my-[90px] px-[75px]">
-        <h1 className="text-[59px] font-semibold text-white text-center mb-12">
-          Explore Marketplace
-        </h1>
-        {isLoading && (
-          <div className="flex justify-center w-full">
-            <BeatLoader
-              color={"#FFFFFF1A"}
-              loading={isLoading}
-              cssOverride={override}
-              size={30}
-              speedMultiplier={1}
-              aria-label="Loading Spinner"
-              data-testid="loader"
-            />
-          </div>
-        )}
-        <div className="grid grid-cols-3 min-[1390px]:grid-cols-4 gap-6 ">
-          {data &&
-            data?.map((item) => (
-              <NftCard
-                key={item.id}
-                name={item.asset.name}
-                symbol={item.buyoutCurrencyValuePerToken.symbol}
-                price={item.buyoutCurrencyValuePerToken.displayValue}
-                image={item.asset.image}
-              />
-            ))}
+    <>
+      {/* Content */}
+      <div className={styles.container}>
+        {/* Top Section */}
+        <h1 className={styles.h1}>NITFEE Conflux Espace</h1>
+        <p className={styles.explain}>
+         Buy and sell your favorite collection NFT with the low fees transaction,and earn CFX. {" "}
+          <b>
+            {" "}
+            <a
+              href=""
+              target=""
+              rel="noopener noreferrer"
+              className={styles.purple}
+            >
+           
+            </a>
+          </b>{" "}
+          
+        </p>
+
+        <hr className={styles.divider} />
+
+        <div style={{ marginTop: 32, marginBottom: 32 }}>
+          {chain?.name === undefined ? (
+            <a
+              className={styles.mainButton}
+              onClick={() => connectWithMetamask()}
+            >
+              Connect Wallet
+            </a>
+          ) : (
+            <Link
+              href="/create"
+              className={styles.mainButton}
+              style={{ textDecoration: "none" }}
+            >
+              Create A Listing
+            </Link>
+          )}
+          {/* <Link href="/cancel" className={`${styles.mainButton}`} style={{ textDecoration: "none" }}>
+            Cancel A Listing
+          </Link> */}
+        </div>
+
+        <div className="main">
+          {
+            // If the listings are loading, show a loading message
+            chain?.name && loadingListings ? (
+              <div>Loading listings...</div>
+            ) : (
+              // Otherwise, show the listings
+              <div className={styles.listingGrid}>
+                {listings?.map((listing) => (
+                  <div
+                    key={listing.id}
+                    className={styles.listingShortView}
+                    onClick={() => router.push(`/listing/${listing.id}`)}
+                  >
+                    <MediaRenderer
+                      src={listing.asset.image}
+                      style={{
+                        borderRadius: 16,
+                        // Fit the image to the container
+                        width: "100%",
+                        height: "100%",
+                      }}
+                    />
+                    <h2 className={styles.nameContainer}>
+                      <Link
+                        href={`/listing/${listing.id}`}
+                        className={styles.name}
+                      >
+                        {listing.asset.name}
+                      </Link>
+                    </h2>
+
+                    <p>
+                      <b>{listing.buyoutCurrencyValuePerToken.displayValue}</b>{" "}
+                      {listing.buyoutCurrencyValuePerToken.symbol}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )
+          }
         </div>
       </div>
-    </div>
+    </>
   );
-}
+};
+
+export default Home;
