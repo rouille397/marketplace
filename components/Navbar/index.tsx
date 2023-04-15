@@ -1,4 +1,4 @@
-import React, { FC } from "react";
+import React, { FC, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useAddress, useMetamask, useDisconnect } from "@thirdweb-dev/react";
@@ -12,9 +12,20 @@ const Navbar: FC = () => {
   const address = useAddress();
   const connectWithMetamask = useMetamask();
   const disconnect = useDisconnect();
+  const [color, setColor] = useState(false);
+
+  useEffect(() => {
+    window.addEventListener("scroll", changeColor);
+    return () => window.removeEventListener("scroll", changeColor);
+  }, []);
+
+  const changeColor = () => {
+    if (window.scrollY >= 40) setColor(true);
+    else setColor(false);
+  };
 
   return (
-    <div className="flex justify-between items-center px-[78px]">
+    <div className="flex justify-between items-center px-[78px] bg-transparent w-full fixed z-10">
       <div className="flex items-center gap-2">
         <Image src={logo} alt="NITFEE" className="w-[72px] h-[70px] object-contain" />
         <h1 className="text-white text-[32px] font-bold uppercase">NITFEE</h1>
