@@ -13,7 +13,6 @@ import "@rainbow-me/rainbowkit/styles.css";
 import { Conflux } from "../helpers/cfx";
 import { metaMaskWallet } from "@rainbow-me/rainbowkit/wallets";
 import { Conflux_Testnet } from "../helpers/cfx-testnet";
-import { goerli } from "wagmi/chains";
 import Layout from "@/components/Layout";
 
 const roboto = Roboto({
@@ -23,7 +22,7 @@ const roboto = Roboto({
 });
 function MyApp({ Component, pageProps }: AppProps) {
   const { provider, chains } = configureChains(
-    [Conflux, Conflux_Testnet, goerli],
+    [Conflux, Conflux_Testnet],
     [
       jsonRpcProvider({
         rpc: (chain) => ({ http: chain.rpcUrls.default.http[0] }),
