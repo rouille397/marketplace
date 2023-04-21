@@ -1,124 +1,210 @@
-import Image from 'next/image'
-import { Inter } from 'next/font/google'
+import React, { useState, CSSProperties, useEffect } from "react";
+import {
+  useActiveListings,
+  useContract,
+  useListing,
+} from "@thirdweb-dev/react";
+import Headers from "../components/Header";
+import NftCard from "../components/NftCard";
+import { MarketplaceAddr } from "../addresses";
+import BeatLoader from "react-spinners/BeatLoader";
+import Button from "../components/Button";
+import { useRouter } from "next/router";
+import Head from "next/head";
+import { zeroPad } from "ethers/lib/utils";
+import NftCarousel from "../components/NftCarousel";
+import Loading from "../components/Loading";
+import Contact from "../components/Contact";
+import Image from "next/image";
+import starIcon from "../public/images/star.svg";
+import circleIcon from "../public/images/circle.svg";
+import NftSteps from "../components/NftStep";
+import NftStep from "../components/NftStep";
+import { CATEGORIES, NFT_STEPS } from "../constants";
+import { useSigner } from "wagmi";
+import { ethers } from "ethers";
 
-const inter = Inter({ subsets: ['latin'] })
+const override: CSSProperties = {
+  display: "block",
+  margin: "0 auto",
+};
 
 export default function Home() {
+  const [recentlyAdded, setRecentlyAdded] = useState<any>([]);
+  const [recentlySold, setRecentlySold] = useState<any>([]);
+  const router = useRouter();
+  const { contract } = useContract(MarketplaceAddr, "marketplace");
+  const { data, isLoading, error } = useActiveListings(contract);
+
+  const { data: signer } = useSigner();
+  const provider = signer?.provider;
+
+  //recently listed
+  useEffect(() => {
+    (async () => {
+      if (!contract) return;
+      let currentBlock = (await provider?.getBlockNumber()) || 890000000;
+      const newlyAdded = await contract?.events.getEvents("ListingAdded", {
+        // fromBlock: from,
+        // toBlock: currentBlock,
+        order: "desc",
+      });
+      console.log("newlyAddedids", newlyAdded);
+      const newlyAddedIds = newlyAdded
+        .map((e) => e?.data?.listingId?.toString())
+        .splice(0, 5);
+
+      let newlyAddedData = [];
+      for (let i = 0; i < newlyAddedIds.length; i++) {
+        try {
+          let result = await contract.getListing(newlyAddedIds[i]);
+          newlyAddedData.push(result);
+          if (newlyAddedData.length == 4) break;
+        } catch (e) {
+          continue;
+        }
+      }
+      console.log("recently listed", newlyAddedData);
+      setRecentlyAdded(newlyAddedData);
+    })();
+  }, [contract, provider]);
+  console.log("recently listed", recentlyAdded);
+
+  //this useEffect will find recently sold NFTS
+  useEffect(() => {
+    (async () => {
+      if (!contract) return;
+      let currentBlock = (await provider?.getBlockNumber()) || 8900000;
+      const recentlySold = await contract?.events.getEvents("NewSale", {
+        // fromBlock: currentBlock - 100000,
+        // toBlock: currentBlock,
+        order: "desc",
+      });
+
+      const recentlySoldIds = recentlySold
+        .map((e) => e?.data?.listingId?.toString())
+        .splice(0, 5);
+
+      let recentlySoldData = [];
+      for (let i = 0; i < recentlySoldIds.length; i++) {
+        try {
+          let result = await contract.getListing(recentlySoldIds[i]);
+          recentlySoldData.push(result);
+          if (recentlySoldData.length == 4) break;
+        } catch (e) {
+          continue;
+        }
+      }
+      console.log("recentlySoldData", recentlySoldData);
+      setRecentlySold(recentlySoldData);
+    })();
+  }, [contract, provider]);
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">pages/index.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
-
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700/10 after:dark:from-sky-900 after:dark:via-[#0141ff]/40 before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
+    <>
+      <Head>
+        <title>Nitfee Marketplace</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta
+          name="description"
+          content="List Your NFTs For Sale, Accept Bids, and Buy NFTs"
         />
+        <meta
+          name="keywords"
+          content="Thirdweb, Marketplace, NFT Marketplace Tutorial, NFT Auction Tutorial, How To Make OpenSea"
+        />
+      </Head>
+      <div className="">
+        <Headers />
+        {/* Nft Steps */}
+        <div className="px-4 my-[60px] lg:my-[120px] lg:px-[75px]">
+          <div className="flex flex-col justify-center items-center w-full gap-3">
+            <p className="text-gradient-secondary text-xl font-normal uppercase flex gap-2">
+              TO BE CREATOR <Image src={starIcon} alt="marketplan" />
+            </p>
+            <h5 className="text-[28px] text-white lg:text-[32px] font-bold flex lg:gap-3">
+              Create and Sell Your NFTs{" "}
+              <Image
+                src={circleIcon}
+                alt="Create and Sell Your NFTs"
+                className="relative top-[-16px] lg:top-0"
+              />
+            </h5>
+          </div>
+          <div className="block lg:flex justify-center items-end gap-10 mt-12 lg:h-[438px]">
+            {NFT_STEPS?.map((step) => (
+              <NftStep
+                key={step.step}
+                title={step.title}
+                description={step.description}
+                step={step.step}
+              />
+            ))}
+          </div>
+        </div>
+        {/* Explore Marketplace */}
+        <div className="px-6 my-[60px] lg:my-[120px] md:px-[75px] min-h-[600px]">
+          <h1 className="text-[32px] lg:text-[59px] font-semibold text-white text-center mb-12">
+            Explore Marketplace
+          </h1>
+          <div className="flex justify-start lg:justify-center items-center gap-5 mb-12 overflow-x-scroll ">
+            {CATEGORIES?.map((category, i) => (
+              <Button key={category} type="rounded" className="">
+                {category}
+              </Button>
+            ))}
+          </div>
+          {isLoading ? (
+            <Loading isLoading={isLoading} />
+          ) : (
+            <div className="flex w-full overflow-x-scroll md:overflow-auto md:grid grid-cols-3 min-[1390px]:grid-cols-4 gap-6 ">
+              {data &&
+                data?.map((item) => (
+                  <NftCard
+                    key={item.id}
+                    name={item.asset.name}
+                    user={"@user"}
+                    symbol={item.buyoutCurrencyValuePerToken.symbol}
+                    price={item.buyoutCurrencyValuePerToken.displayValue}
+                    image={item.asset.image}
+                    onClick={() => router.push(`/listing/${item.id}`)}
+                  />
+                ))}
+            </div>
+          )}
+          {!isLoading && (
+            <div className="text-center mt-12">
+              <Button type="rounded">View More</Button>
+            </div>
+          )}
+        </div>
+        {/* Newly listed */}
+        <div className="px-4 my-[60px] lg:my-[120px] lg:px-[75px] min-h-[500px]">
+          <h1 className="text-[32px] lg:text-[59px] font-semibold text-white text-center mb-12">
+            Newly Listed
+          </h1>
+          {!recentlyAdded?.length ? (
+            <Loading isLoading={isLoading} />
+          ) : (
+            <NftCarousel listing={recentlyAdded} />
+          )}
+        </div>
+
+        {/* Recently sold */}
+        <div className="px-4 my-[60px] lg:my-[120px] lg:px-[75px] min-h-[500px]">
+          <h1 className="text-[32px] lg:text-[59px] font-semibold text-white text-center mb-12">
+            Recently Sold
+          </h1>
+          {!recentlySold?.length ? (
+            <Loading isLoading={isLoading} />
+          ) : (
+            <NftCarousel listing={recentlySold} />
+          )}
+        </div>
+        {/* Contact us */}
+        {/* <div className="my-[120px] px-[75px]">
+          <Contact />
+        </div> */}
       </div>
-
-      <div className="mb-32 grid text-center lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`${inter.className} mb-3 text-2xl font-semibold`}>
-            Docs{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p
-            className={`${inter.className} m-0 max-w-[30ch] text-sm opacity-50`}
-          >
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`${inter.className} mb-3 text-2xl font-semibold`}>
-            Learn{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p
-            className={`${inter.className} m-0 max-w-[30ch] text-sm opacity-50`}
-          >
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`${inter.className} mb-3 text-2xl font-semibold`}>
-            Templates{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p
-            className={`${inter.className} m-0 max-w-[30ch] text-sm opacity-50`}
-          >
-            Discover and deploy boilerplate example Next.js&nbsp;projects.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`${inter.className} mb-3 text-2xl font-semibold`}>
-            Deploy{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p
-            className={`${inter.className} m-0 max-w-[30ch] text-sm opacity-50`}
-          >
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  )
+    </>
+  );
 }
