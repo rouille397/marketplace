@@ -13,9 +13,20 @@ interface ICardProps {
   listerId: string | null | undefined;
 }
 
-const Card: FC<ICardProps> = ({ name, image, price, symbol, user, onClick, listerId }) => {
+const Card: FC<ICardProps> = ({
+  name,
+  image,
+  price,
+  symbol,
+  user,
+  onClick,
+  listerId,
+}) => {
   return (
-    <div className="w-full h-[455px] md:w-[280px] lg:h-[550px]" onClick={onClick}>
+    <div
+      className="w-full h-[455px] md:w-[280px] lg:h-[550px]"
+      onClick={onClick}
+    >
       <div className="">
         {1 && (
           <img
@@ -31,10 +42,12 @@ const Card: FC<ICardProps> = ({ name, image, price, symbol, user, onClick, liste
       <div className="flex justify-center relative bottom-[75px]">
         <div className="w-[85%] md:w-[240px] h-[155px] bg-[#F2F2F2] rounded-3xl p-4 flex flex-col justify-between">
           <div className="flex justify-between gap-4">
-            <h5 className=" capitalize font-extrabold text-textBlack">{"Lighting Axe"}</h5>
+            <h5 className=" capitalize font-extrabold text-textBlack">
+              {"Lighting Axe"}
+            </h5>
             <h5 className="nft-price text-[18px] font-extrabold uppercase">
               {price}
-              {"cfx"}
+              {symbol}
             </h5>
           </div>
           <div className="flex gap-[10px] items-center">

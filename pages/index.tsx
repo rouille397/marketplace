@@ -1,12 +1,5 @@
 import React, { useState, CSSProperties, useEffect } from "react";
 import {
-  useActiveListings,
-  useContract,
-  useDirectListing,
-  useDirectListings,
-  useListing,
-  useListings,
-  useMakeOffer,
   useSDK,
   useValidDirectListings,
   useValidEnglishAuctions,
@@ -25,11 +18,9 @@ import Contact from "../components/Contact";
 import Image from "next/image";
 import starIcon from "../public/images/star.svg";
 import circleIcon from "../public/images/circle.svg";
-import NftSteps from "../components/NftStep";
 import NftStep from "../components/NftStep";
 import { CATEGORIES, NFT_STEPS } from "../constants";
 import { useSigner } from "wagmi";
-import { ethers } from "ethers";
 
 const override: CSSProperties = {
   display: "block",
@@ -87,7 +78,6 @@ export default function Home() {
 
       let currentBlock = await provider?.getBlockNumber();
 
-      if (!currentBlock) return;
       //get 5% of the block number
       let from = currentBlock - Math.floor(currentBlock * 0.05);
       let tryCount = 0;
@@ -111,35 +101,48 @@ export default function Home() {
           continue;
         }
       }
-      console.log("newlyAddedNFTs", newlyAddedNFTs);
-      setRecentlyAdded(newlyAddedNFTs);
+      let listingIds = newlyAddedNFTs.map((item: any) =>
+        item.data.listingId.toString()
+      );
+
+      let listingDataPromises: any = [];
+      listingIds.forEach((id: any) => {
+        listingDataPromises.push(contract?.getListing(id));
+      });
+      let results = await Promise.all(
+        listingDataPromises.map((p: any) => p.catch((e: any) => e))
+      );
+      const validResults = results.filter(
+        (result: any) => !(result instanceof Error)
+      );
+
+      console.log("newlyAddedNFTs", validResults);
+      setRecentlyAdded(validResults);
     })();
   }, [sdk]);
 
   // //this useEffect will find recently sold NFTS
   useEffect(() => {
     (async () => {
-      if (!sdk || recentlyAdded.length > 0) return;
-      const contract = await sdk.getContract(
-        MarketplaceAddr,
-        "marketplace" // Provide the "marketplace" contract type
-      );
+      if (!sdk || recentlySold.length > 0) return;
+      const contract = await sdk.getContract(MarketplaceAddr, "marketplace");
 
       let currentBlock = await provider?.getBlockNumber();
-      if (!currentBlock) return;
+
       //get 5% of the block number
       let from = currentBlock - Math.floor(currentBlock * 0.05);
       let tryCount = 0;
       let recentlySoldNfts: any = [];
 
-      while (tryCount < 5 || recentlySoldNfts.length < 5) {
+      while (tryCount < 5 && recentlySoldNfts.length < 5) {
+        console.log("tryCount", tryCount);
         try {
           let recentlySoldd = await contract?.events.getEvents("NewSale", {
             fromBlock: from,
             toBlock: currentBlock,
             order: "desc",
           });
-          console.log("newlyAddedids", recentlySoldd);
+          console.log("recentlySoldd", recentlySoldd);
           recentlySoldNfts = [...recentlySoldNfts, ...recentlySoldd];
           if (recentlySoldNfts.length > 5) break;
           currentBlock = from;
@@ -150,8 +153,26 @@ export default function Home() {
           continue;
         }
       }
-      setRecentlySold(recentlySoldNfts);
-      console.log("recentlySoldNfts", recentlySoldNfts);
+
+      console.log("recentlySoldNftEvents", recentlySoldNfts);
+      let listingIds = recentlySoldNfts.map((item: any) =>
+        item.data.listingId.toString()
+      );
+
+      let listingDataPromises: any = [];
+      listingIds.forEach((id: any) => {
+        listingDataPromises.push(contract?.getListing(id));
+      });
+      let results = await Promise.all(
+        listingDataPromises.map((p: any) => p.catch((e: any) => e))
+      );
+      const validResults = results.filter(
+        (result: any) => !(result instanceof Error)
+      );
+
+      setRecentlySold(validResults);
+
+      console.log("recentlySoldNfts", validResults);
     })();
   }, [sdk]);
 
@@ -222,10 +243,8 @@ export default function Home() {
                     key={item.id}
                     name={item.asset.name}
                     user={"@user"}
-                    // symbol={item.buyoutCurrencyValuePerToken.symbol}
-                    // price={item.buyoutCurrencyValuePerToken.displayValue}
-                    symbol={"CFX"}
-                    price={item.buyoutPrice.toString()}
+                    symbol={item.buyoutCurrencyValuePerToken.symbol}
+                    price={item.buyoutCurrencyValuePerToken.displayValue}
                     image={item.asset.image}
                     onClick={() => router.push(`/listing/${item.id}`)}
                   />
