@@ -43,7 +43,9 @@ const Create: NextPage = () => {
           // when should the listing open up for offers
           startTimestamp: new Date(),
           // how long the listing will be open for
-          listingDurationInSeconds: 86400,
+          listingDurationInSeconds: Math.floor(
+            new Date(duration).getTime() - new Date().getTime() / 1000
+          ),
           // how many of the asset you want to list
           quantity: 1,
           // address of the currency contract that will be used to pay for the listing
@@ -52,7 +54,10 @@ const Create: NextPage = () => {
           buyoutPricePerToken: directPrice,
         };
         if (!contract) return;
-        const tx = await contract.direct.createListing(listing);
+        let tx: any = await contract.direct.createListing.prepare(listing);
+        const gasLimit = await tx.estimateGasLimit(); // Estimate the gas limit
+        tx.setGasLimit(Math.floor(gasLimit.toString() * 1.2));
+        tx = await tx.execute(); // Execute the transaction
         const receipt = tx.receipt; // the transaction receipt
         const listingId = tx.id; // the id of the newly created listing
         console.log("receiptreceipt", receipt);
@@ -68,7 +73,9 @@ const Create: NextPage = () => {
           // when should the listing open up for offers
           startTimestamp: new Date(),
           // how long the listing will be open for
-          listingDurationInSeconds: 86400,
+          listingDurationInSeconds: Math.floor(
+            new Date(duration).getTime() - new Date().getTime() / 1000
+          ),
           // how many of the asset you want to list
           quantity: 1,
           // address of the currency contract that will be used to pay for the listing
@@ -79,7 +86,10 @@ const Create: NextPage = () => {
           reservePricePerToken: reservePrice,
         };
         if (!contract) return;
-        const tx = await contract.auction.createListing(auction);
+        let tx: any = await contract.auction.createListing.prepare(auction);
+        const gasLimit = await tx.estimateGasLimit(); // Estimate the gas limit
+        tx.setGasLimit(Math.floor(gasLimit.toString() * 1.2));
+        tx = await tx.execute(); // Execute the transaction
         const receipt = tx.receipt; // the transaction receipt
         const listingId = tx.id; // the id of the newly created listing
         console.log("receiptreceipt", receipt);
@@ -232,17 +242,17 @@ const Create: NextPage = () => {
             onChange={(e) => setReservePrice(e.target.value)}
           />
         )}
-        {active === "auctionList" && (
-          <input
-            required
-            type="date"
-            name="duration"
-            placeholder="Duration"
-            className="w-full p-4 rounded border border-[#696969] bg-transparent outline-none text-white"
-            value={duration}
-            onChange={(e) => setDuration(e.target.value)}
-          />
-        )}
+
+        <input
+          required
+          type="date"
+          name="duration"
+          placeholder="Duration"
+          className="w-full p-4 rounded border border-[#696969] bg-transparent outline-none text-white"
+          value={duration}
+          onChange={(e) => setDuration(e.target.value)}
+        />
+
         <button
           onClick={(e) => handleCreateListing(e)}
           className="walletConnectButton px-[36px] py-3 rounded-xl text-white"

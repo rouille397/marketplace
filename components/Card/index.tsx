@@ -11,6 +11,7 @@ interface ICardProps {
   image: string | null | undefined;
   onClick: () => void;
   listerId: string | null | undefined;
+  soldOut?: boolean;
 }
 
 const Card: FC<ICardProps> = ({
@@ -21,6 +22,7 @@ const Card: FC<ICardProps> = ({
   user,
   onClick,
   listerId,
+  soldOut,
 }) => {
   return (
     <div
@@ -43,7 +45,7 @@ const Card: FC<ICardProps> = ({
         <div className="w-[85%] md:w-[240px] h-[155px] bg-[#F2F2F2] rounded-3xl p-4 flex flex-col justify-between">
           <div className="flex justify-between gap-4">
             <h5 className=" capitalize font-extrabold text-textBlack">
-              {"Lighting Axe"}
+              {name}
             </h5>
             <h5 className="nft-price text-[18px] font-extrabold uppercase">
               {price}
@@ -61,7 +63,7 @@ const Card: FC<ICardProps> = ({
               {listerId?.slice(0, 6).concat("...").concat(listerId?.slice(-4))}
             </h3>
           </div>
-          <Button>Buy it now</Button>
+          <Button>{soldOut ? "Sold Out" : "Buy it now"}</Button>
         </div>
       </div>
     </div>

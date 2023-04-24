@@ -32,6 +32,7 @@ const NftCarousel: FC<INftCarouselProps> = ({ listing }) => {
           image={item.asset.image}
           listerId={item.sellerAddress}
           onClick={() => push(`/listing/${item.id}`)}
+          soldOut={item.sold || false}
         />
       ))}
     </Slider>

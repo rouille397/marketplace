@@ -10,7 +10,7 @@
 *::before,
 *::after {
   box-sizing: border-box;
-  /* color: white; */
+  color: white;
 }
 
 /* Set core body defaults */

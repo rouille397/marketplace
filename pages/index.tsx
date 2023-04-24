@@ -1,31 +1,19 @@
-import React, { useState, CSSProperties, useEffect } from "react";
-import {
-  useSDK,
-  useValidDirectListings,
-  useValidEnglishAuctions,
-} from "@thirdweb-dev/react";
+import React, { useState, useEffect } from "react";
+import { useSDK } from "@thirdweb-dev/react";
 import Headers from "../components/Header";
 import NftCard from "../components/NftCard";
 import { MarketplaceAddr } from "../addresses";
-import BeatLoader from "react-spinners/BeatLoader";
 import Button from "../components/Button";
 import { useRouter } from "next/router";
 import Head from "next/head";
-import { zeroPad } from "ethers/lib/utils";
 import NftCarousel from "../components/NftCarousel";
 import Loading from "../components/Loading";
-import Contact from "../components/Contact";
 import Image from "next/image";
 import starIcon from "../public/images/star.svg";
 import circleIcon from "../public/images/circle.svg";
 import NftStep from "../components/NftStep";
 import { CATEGORIES, NFT_STEPS } from "../constants";
 import { useSigner } from "wagmi";
-
-const override: CSSProperties = {
-  display: "block",
-  margin: "0 auto",
-};
 
 export default function Home() {
   const [recentlyAdded, setRecentlyAdded] = useState<any>([]);
@@ -35,13 +23,20 @@ export default function Home() {
     count: 10, // Number of auctions to fetch
     start: 0, // Start from this index (pagination)
   });
+  const [contract, setContract] = useState<any>(null);
+  const [currentBlockNum, setCurrentBlockNum] = useState<any>(null);
+
   const [listingLoading, setListingLoading] = useState(false);
+  const [recentlyAddedLoading, setRecentlyAddedLoading] = useState(false);
+  const [recentlySoldLoading, setRecentlySoldLoading] = useState(false);
+
   const { data: signer } = useSigner();
   const provider = signer?.provider;
 
   const router = useRouter();
 
   const sdk = useSDK();
+
   useEffect(() => {
     if (!sdk) return;
 
@@ -52,6 +47,20 @@ export default function Home() {
           "marketplace" // Provide the "marketplace" contract type
         );
 
+        const currentBlock = await provider?.getBlockNumber();
+        setCurrentBlockNum(currentBlock);
+        setContract(contract);
+      } catch (e) {
+        console.log("error", e);
+      }
+    })();
+  }, [sdk]);
+
+  useEffect(() => {
+    if (!contract) return;
+
+    (async () => {
+      try {
         setListingLoading(true);
         const listings = await contract.getActiveListings({
           start: listingPagination.start,
@@ -65,21 +74,17 @@ export default function Home() {
         setListingLoading(false);
       }
     })();
-  }, [sdk]);
+  }, [contract, listingPagination]);
 
   //recently listed
   useEffect(() => {
+    if (!contract || !currentBlockNum || recentlyAdded.length > 0) return;
     (async () => {
-      if (!sdk || recentlyAdded.length > 0) return;
-      const contract = await sdk.getContract(
-        MarketplaceAddr,
-        "marketplace" // Provide the "marketplace" contract type
-      );
+      setListingLoading(true);
 
-      let currentBlock = await provider?.getBlockNumber();
-
+      let currentBlock = currentBlockNum;
       //get 5% of the block number
-      let from = currentBlock - Math.floor(currentBlock * 0.05);
+      let from = currentBlock - Math.floor(currentBlock * 0.03);
       let tryCount = 0;
       let newlyAddedNFTs: any = [];
       console.log("check1");
@@ -94,7 +99,7 @@ export default function Home() {
           newlyAddedNFTs = [...newlyAddedNFTs, ...newlyAdded];
           if (newlyAddedNFTs.length > 5) break;
           currentBlock = from;
-          from = from - Math.floor(currentBlock * 0.05);
+          from = from - Math.floor(currentBlock * 0.03);
           tryCount++;
         } catch (e) {
           console.log("errorrrrr", e);
@@ -118,19 +123,18 @@ export default function Home() {
 
       console.log("newlyAddedNFTs", validResults);
       setRecentlyAdded(validResults);
+      setListingLoading(false);
     })();
-  }, [sdk]);
+  }, [contract, currentBlockNum]);
 
   // //this useEffect will find recently sold NFTS
   useEffect(() => {
     (async () => {
-      if (!sdk || recentlySold.length > 0) return;
-      const contract = await sdk.getContract(MarketplaceAddr, "marketplace");
-
-      let currentBlock = await provider?.getBlockNumber();
-
+      if (!contract || recentlySold.length > 0 || !currentBlockNum) return;
+      setRecentlySoldLoading(true);
+      let currentBlock = currentBlockNum;
       //get 5% of the block number
-      let from = currentBlock - Math.floor(currentBlock * 0.05);
+      let from = currentBlock - Math.floor(currentBlock * 0.03);
       let tryCount = 0;
       let recentlySoldNfts: any = [];
 
@@ -146,7 +150,7 @@ export default function Home() {
           recentlySoldNfts = [...recentlySoldNfts, ...recentlySoldd];
           if (recentlySoldNfts.length > 5) break;
           currentBlock = from;
-          from = from - Math.floor(currentBlock * 0.05);
+          from = from - Math.floor(currentBlock * 0.03);
 
           tryCount++;
         } catch (e) {
@@ -166,15 +170,15 @@ export default function Home() {
       let results = await Promise.all(
         listingDataPromises.map((p: any) => p.catch((e: any) => e))
       );
-      const validResults = results.filter(
+      let validResults = results.filter(
         (result: any) => !(result instanceof Error)
       );
-
+      validResults = validResults.map((item: any) => ({ ...item, sold: true }));
       setRecentlySold(validResults);
-
+      setRecentlySoldLoading(false);
       console.log("recentlySoldNfts", validResults);
     })();
-  }, [sdk]);
+  }, [contract, currentBlockNum]);
 
   console.log("recentlyAdded", recentlyAdded);
 
@@ -264,23 +268,25 @@ export default function Home() {
             Newly Listed
           </h1>
 
-          {0 ? (
-            <Loading isLoading={recentlyAdded.length == 0} />
+          {recentlyAddedLoading ? (
+            <Loading isLoading={recentlyAddedLoading} />
           ) : (
             <NftCarousel listing={recentlyAdded} />
           )}
         </div>
 
         {/* Recently sold */}
+
         <div className="px-4 my-[60px] lg:my-[120px] lg:px-[75px] min-h-[500px]">
           <h1 className="text-[32px] lg:text-[59px] font-semibold text-white text-center mb-12">
-            Recently Sold
+            Recently Sold{" "}
           </h1>
-          {/* {!recentlySold?.length ? (
-            <Loading isLoading={isLoading} />
+
+          {recentlySoldLoading ? (
+            <Loading isLoading={recentlySoldLoading} />
           ) : (
             <NftCarousel listing={recentlySold} />
-          )} */}
+          )}
         </div>
         {/* Contact us */}
         {/* <div className="my-[120px] px-[75px]">
