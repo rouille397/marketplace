@@ -13,6 +13,7 @@ const ListingPage: NextPage = () => {
   const [minNextBid, setMinNextBid] = useState<any>(null);
   const [winningBid, setWinningBid] = useState<any>(null);
   const [secondsTillEnd, setSecondsTillEnd] = useState<any>(null);
+  const [winnerAddress, setWinnerAddress] = useState("");
   const router = useRouter();
   const { address } = useAccount();
   const sdk = useSDK();
@@ -84,7 +85,14 @@ const ListingPage: NextPage = () => {
   //     }
   //   }
   const createBidHandler = async () => {
-    if (!contract || secondsTillEnd < 0) return;
+    if (
+      !contract ||
+      secondsTillEnd < 0 ||
+      bidAmount < minNextBid ||
+      secondsTillEnd < 0 ||
+      !secondsTillEnd
+    )
+      return;
     try {
       let tx: any = await contract.auction.makeBid.prepare(
         listingId,
@@ -108,6 +116,7 @@ const ListingPage: NextPage = () => {
       tx.setGasLimit(Math.floor(gasLimit.toString() * 1.2));
       tx = await tx.execute(); // Execute the transaction
       alert("NFT bought successfully!");
+      router.push("/");
     } catch (error) {
       console.error(error);
       alert(error);
@@ -129,8 +138,8 @@ const ListingPage: NextPage = () => {
       } else {
         let tx: any = await contract.auction.cancelListing.prepare(listingId);
         const gasLimit = await tx.estimateGasLimit(); // Estimate the gas limit
-        tx.setGasLimit(Math.floor(gasLimit.toString() * 1.2));
-        tx = tx.execute(); // Execute the transaction
+        await tx.setGasLimit(Math.floor(gasLimit.toString() * 1.2));
+        tx = await tx.execute(); // Execute the transaction
         alert("Listing cancelled successfully!");
       }
     } catch (e) {
@@ -160,27 +169,7 @@ const ListingPage: NextPage = () => {
     }
     return result.trim();
   }
-  const calcTime = () => {
-    if (listing?.type == 0) {
-      setSecondsTillEnd(
-        +listing?.secondsUntilEnd.toString() - new Date().getTime() / 1000
-      );
-    } else if (listing?.type == 1) {
-      setSecondsTillEnd(
-        +listing?.endTimeInEpochSeconds.toString() - new Date().getTime() / 1000
-      );
-    }
-  };
 
-  // if (listing?.secondsUntilEnd)
-  //   secondsTillEnd = new Date(+listing?.secondsUntilEnd?.toString() * 500) - new Date().getTime() || 0;
-  // else {
-  //   //endTimeInEpochSeconds
-  //   secondsTillEnd=
-  //     new Date(+listing?.endTimeInEpochSeconds?.toString() * 500) - new Date().getTime() || 0;
-  // }
-
-  // console.log("secondstillend", dhm(secondsTillEnd));
   const minimumNextBid = async () => {
     const minimumNextBid = await contract.auction.getMinimumNextBid(listingId);
     console.log(minimumNextBid, "minimumNextBid");
@@ -188,24 +177,43 @@ const ListingPage: NextPage = () => {
   };
   const getWinningBid = async () => {
     const winningBid = await contract.auction.getWinningBid(listingId);
+    if (!winningBid) {
+      setWinningBid("0");
+      return;
+    }
+    console.log("getWinningBid", winningBid);
     console.log(
       utils.formatEther(winningBid.pricePerToken.toString()),
       "winningBid"
     );
+    setWinnerAddress(winningBid.buyerAddress);
     setWinningBid(utils.formatEther(winningBid.pricePerToken.toString()));
   };
 
   //calcTime every 5 seconds
 
+  let interval: any;
   useEffect(() => {
-    if (secondsTillEnd > 0)
-      setInterval(() => {
-        calcTime();
+    if (listing?.type == 1) {
+      interval = setInterval(() => {
+        console.log("runningrun");
+        setSecondsTillEnd(
+          (+listing?.endTimeInEpochSeconds.toString() * 1000 -
+            new Date().getTime()) /
+            1000
+        );
       }, 5000);
-  }, []);
+    }
+    return () => clearInterval(interval);
+  }, [listing]);
 
   useEffect(() => {
     if (listing?.type === 1) {
+      setSecondsTillEnd(
+        (+listing?.endTimeInEpochSeconds.toString() * 1000 -
+          new Date().getTime()) /
+          1000
+      );
       minimumNextBid();
       getWinningBid();
     }
@@ -217,6 +225,100 @@ const ListingPage: NextPage = () => {
 
   if (!listing) {
     return <div className={styles.loadingOrError}>Listing not found</div>;
+  }
+  const transferBackHandler = async () => {
+    try {
+      await contract.auction.closeListing(listingId, address);
+      console.log("NFT transferred back to you successfuly");
+      router.push("/");
+    } catch (e) {
+      console.log(e);
+      console.log(e);
+      alert("Transfer Failed!");
+    }
+  };
+
+  const transferToBuyerHandler = async () => {
+    try {
+      await contract.auction.closeListing(listingId, winnerAddress);
+      console.log("NFT sold successfuly");
+      router.push("/");
+    } catch (e) {
+      console.log(e);
+      alert("Transfer Failed!");
+    }
+  };
+
+  let ownerButton;
+  if (listing.sellerAddress == address) {
+    if (listing.type == 0 && listing.sellerAddress == address) {
+      ownerButton = (
+        <button
+          className="uppercase font-bold border-none text-base text-white gap-2 px-6 py-3 rounded-xl walletConnectButton  text-center !flex !items-center !justify-center flex-1 md:w-auto w-full xl:mr-5 max-w-[618px]"
+          onClick={cancelListingHandler}
+          //todo cancel sale
+        >
+          Cancel Listing
+        </button>
+      );
+    }
+    if (listing.type == 1 && winningBid > 0 && secondsTillEnd < 0) {
+      ownerButton = (
+        <div className="flex w-full gap-3 md:flex-row flex-col">
+          <button
+            className="uppercase font-bold border-none text-base text-white gap-2 px-6 py-3 rounded-xl walletConnectButton  text-center !flex !items-center !justify-center flex-1 md:w-auto w-full xl:mr-5 max-w-[618px]"
+            onClick={transferBackHandler}
+            //todo cancel sale
+          >
+            Cancel Sale
+          </button>
+          <button
+            style={{ background: "#1f2b49b3" }}
+            className="uppercase font-bold border-none text-base text-white gap-2 px-6 py-3 rounded-xl walletConnectButton  text-center !flex !items-center !justify-center flex-1 md:w-auto w-full xl:mr-5 max-w-[618px]"
+            onClick={transferToBuyerHandler}
+            //todo cancel sale
+          >
+            Execute Sale ({winningBid})
+          </button>
+        </div>
+      );
+    }
+    if (
+      listing.type == 1 &&
+      (!winningBid || winningBid <= 0) &&
+      secondsTillEnd < 0
+    ) {
+      ownerButton = (
+        <button
+          className="uppercase font-bold border-none text-base text-white gap-2 px-6 py-3 rounded-xl walletConnectButton  text-center !flex !items-center !justify-center flex-1 md:w-auto w-full xl:mr-5 max-w-[618px]"
+          onClick={cancelListingHandler}
+          //todo cancel sale
+        >
+          Close Sale
+        </button>
+      );
+    }
+    if (listing.type == 1 && (!winningBid || winningBid == 0)) {
+      ownerButton = (
+        <button
+          className="uppercase font-bold border-none text-base text-white gap-2 px-6 py-3 rounded-xl walletConnectButton  text-center !flex !items-center !justify-center flex-1 md:w-auto w-full xl:mr-5 max-w-[618px]"
+          onClick={transferBackHandler}
+          //todo conclude sale
+        >
+          Cancel Listing
+        </button>
+      );
+    }
+    if (listing.type == 1 && winningBid > 0 && secondsTillEnd > 0) {
+      ownerButton = (
+        <button
+          className="uppercase font-bold border-none text-base text-white gap-2 px-6 py-3 rounded-xl walletConnectButton  text-center !flex !items-center !justify-center flex-1 md:w-auto w-full xl:mr-5 max-w-[618px]"
+          disabled
+        >
+          Winning Bid ({winningBid})
+        </button>
+      );
+    }
   }
 
   return (
@@ -360,22 +462,25 @@ const ListingPage: NextPage = () => {
                   </p>
                 </div>
               )}
+              {listing.type == 1 && address == listing.sellerAddress && (
+                <div className="mt-2">
+                  <p>
+                    <b className="font-extrabold md:text-xl text-base leading-6 capitalize tracking-wide mr-2">
+                      Winning Bid
+                    </b>
+                    <span className="text-[#878788] font-normal md:text-xl text-base ">
+                      {winningBid}
+                    </span>
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
           {
             <div className="flex gap-5 items-center w-full xl:pr-10 md:flex-row flex-col">
               {address == listing.sellerAddress ? (
-                <button
-                  style={{ borderStyle: "none" }}
-                  className="uppercase font-bold text-base text-white gap-2 px-6 py-3 rounded-xl walletConnectButton  text-center !flex !items-center !justify-center flex-1 md:w-auto w-full xl:mr-5 max-w-[618px]"
-                  onClick={cancelListingHandler}
-                  disabled={minNextBid > 0}
-                >
-                  {winningBid > 0
-                    ? `Winning bid ${winningBid}`
-                    : "Cancel Listing"}
-                </button>
+                ownerButton
               ) : (
                 <button
                   style={{ borderStyle: "none" }}
@@ -383,15 +488,11 @@ const ListingPage: NextPage = () => {
                   onClick={buyNft}
                   disabled={secondsTillEnd < 0}
                 >
-                  {secondsTillEnd < 0 ? (
-                    " (Listing Inactive)"
-                  ) : (
-                    <span>
-                      BUY IT NOW ({" "}
-                      {listing.buyoutCurrencyValuePerToken.displayValue}{" "}
-                      {listing.buyoutCurrencyValuePerToken.symbol})
-                    </span>
-                  )}
+                  <span>
+                    BUY IT NOW ({" "}
+                    {listing.buyoutCurrencyValuePerToken.displayValue}{" "}
+                    {listing.buyoutCurrencyValuePerToken.symbol})
+                  </span>
                 </button>
               )}
 

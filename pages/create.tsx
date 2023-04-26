@@ -29,12 +29,22 @@ const Create: NextPage = () => {
 
   const { contract } = useContract(MarketplaceAddr, "marketplace");
 
+  function secondsBetweenDates(date: any) {
+    const now: any = new Date().getTime();
+    const selected = new Date(date).getTime();
+    const diff = Math.abs(selected - now);
+    const seconds = Math.floor(diff / 1000);
+    console.log("secondsss", seconds);
+    return seconds;
+  }
+
   async function handleCreateListing(e: any) {
     try {
       e.preventDefault();
       if (!signer) return;
       // Data of the listing you want to create
       if (active === "directListing") {
+        console.log("direct listing called", directPrice);
         const listing = {
           // address of the NFT contract the asset you want to list is on
           assetContractAddress: contractAddress,
@@ -43,9 +53,7 @@ const Create: NextPage = () => {
           // when should the listing open up for offers
           startTimestamp: new Date(),
           // how long the listing will be open for
-          listingDurationInSeconds: Math.floor(
-            new Date(duration).getTime() - new Date().getTime() / 1000
-          ),
+          listingDurationInSeconds: 31536000,
           // how many of the asset you want to list
           quantity: 1,
           // address of the currency contract that will be used to pay for the listing
@@ -53,8 +61,11 @@ const Create: NextPage = () => {
           // how much the asset will be sold for
           buyoutPricePerToken: directPrice,
         };
+
+        console.log("listing", listing);
         if (!contract) return;
         let tx: any = await contract.direct.createListing.prepare(listing);
+        console.log("reached here");
         const gasLimit = await tx.estimateGasLimit(); // Estimate the gas limit
         tx.setGasLimit(Math.floor(gasLimit.toString() * 1.2));
         tx = await tx.execute(); // Execute the transaction
@@ -62,8 +73,7 @@ const Create: NextPage = () => {
         const listingId = tx.id; // the id of the newly created listing
         console.log("receiptreceipt", receipt);
         console.log("listingIdlistingId", listingId);
-      }
-      if (active === "auctionList") {
+      } else {
         // Data of the auction you want to create
         const auction = {
           // address of the contract the asset you want to list is on
@@ -73,9 +83,7 @@ const Create: NextPage = () => {
           // when should the listing open up for offers
           startTimestamp: new Date(),
           // how long the listing will be open for
-          listingDurationInSeconds: Math.floor(
-            new Date(duration).getTime() - new Date().getTime() / 1000
-          ),
+          listingDurationInSeconds: secondsBetweenDates(duration),
           // how many of the asset you want to list
           quantity: 1,
           // address of the currency contract that will be used to pay for the listing
@@ -85,6 +93,7 @@ const Create: NextPage = () => {
           // the minimum bid that will be accepted for the token
           reservePricePerToken: reservePrice,
         };
+        console.log("auction list called", auction);
         if (!contract) return;
         let tx: any = await contract.auction.createListing.prepare(auction);
         const gasLimit = await tx.estimateGasLimit(); // Estimate the gas limit
@@ -243,15 +252,17 @@ const Create: NextPage = () => {
           />
         )}
 
-        <input
-          required
-          type="date"
-          name="duration"
-          placeholder="Duration"
-          className="w-full p-4 rounded border border-[#696969] bg-transparent outline-none text-white"
-          value={duration}
-          onChange={(e) => setDuration(e.target.value)}
-        />
+        {active !== "directListing" && (
+          <input
+            required
+            type="date"
+            name="duration"
+            placeholder="Duration"
+            className="w-full p-4 rounded border border-[#696969] bg-transparent outline-none text-white"
+            value={duration}
+            onChange={(e) => setDuration(e.target.value)}
+          />
+        )}
 
         <button
           onClick={(e) => handleCreateListing(e)}

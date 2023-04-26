@@ -142,7 +142,7 @@ export default function Home() {
         console.log("tryCount", tryCount);
         try {
           let recentlySoldd = await contract?.events.getEvents("NewSale", {
-            fromBlock: from,
+            fromBlock: 0,
             toBlock: currentBlock,
             order: "desc",
           });
