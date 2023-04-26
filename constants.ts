@@ -32,7 +32,7 @@ export const NAVBAR = [
   ];
   
   export const CATEGORIES = [
-    "Long added ",
+    "All",
     "Art",
     "Gaming",
     "Sports",

@@ -9,6 +9,9 @@ import { ethers } from "ethers";
 import marketplaceABI from "../helpers/marketplaceAbi.json";
 import { useContract, useCreateDirectListing } from "@thirdweb-dev/react";
 
+import { collection, addDoc, query, where, getDocs } from "firebase/firestore";
+import { db } from "../helpers/firebase-config";
+
 // useActiveChain, useSwitchChain, useChainId
 
 const Create: NextPage = () => {
@@ -22,6 +25,7 @@ const Create: NextPage = () => {
   const [buyoutPrice, setBuyoutPrice] = useState("");
   const [reservePrice, setReservePrice] = useState("");
   const [duration, setDuration] = useState("");
+  const [category, setCategory] = useState("");
 
   const { address } = useAccount();
   const { data: signer } = useSigner();
@@ -64,6 +68,24 @@ const Create: NextPage = () => {
 
         console.log("listing", listing);
         if (!contract) return;
+
+        const q1 = query(
+          collection(db, "nfts"),
+          where("seller", "==", address),
+          where("tokenId", "==", tokenId)
+        );
+        const querySnapshot = await getDocs(q1);
+        let alreadyListed = false;
+        querySnapshot.forEach((doc) => {
+          // doc.data() is never undefined for query doc snapshots
+          console.log(doc.id, "q111 => ", doc.data());
+          alreadyListed = true;
+        });
+
+        if (alreadyListed) {
+          alert("Already listed");
+          return;
+        }
         let tx: any = await contract.direct.createListing.prepare(listing);
         console.log("reached here");
         const gasLimit = await tx.estimateGasLimit(); // Estimate the gas limit
@@ -73,6 +95,14 @@ const Create: NextPage = () => {
         const listingId = tx.id; // the id of the newly created listing
         console.log("receiptreceipt", receipt);
         console.log("listingIdlistingId", listingId);
+        const docRef = await addDoc(collection(db, "nfts"), {
+          ...listing,
+          seller: address,
+          category: category,
+          listingId: listingId.toString(),
+        });
+        console.log("doc ref", docRef);
+        router.push("/");
       } else {
         // Data of the auction you want to create
         const auction = {
@@ -95,6 +125,24 @@ const Create: NextPage = () => {
         };
         console.log("auction list called", auction);
         if (!contract) return;
+
+        const q1 = query(
+          collection(db, "nfts"),
+          where("seller", "==", address),
+          where("tokenId", "==", tokenId)
+        );
+        const querySnapshot = await getDocs(q1);
+        let alreadyListed = false;
+        querySnapshot.forEach((doc) => {
+          // doc.data() is never undefined for query doc snapshots
+          console.log(doc.id, "q111 => ", doc.data());
+          alreadyListed = true;
+        });
+
+        if (alreadyListed) {
+          alert("Already listed");
+          return;
+        }
         let tx: any = await contract.auction.createListing.prepare(auction);
         const gasLimit = await tx.estimateGasLimit(); // Estimate the gas limit
         tx.setGasLimit(Math.floor(gasLimit.toString() * 1.2));
@@ -103,7 +151,18 @@ const Create: NextPage = () => {
         const listingId = tx.id; // the id of the newly created listing
         console.log("receiptreceipt", receipt);
         console.log("listingIdlistingId", listingId);
+        console.log("receiptreceipt", receipt);
+        console.log("listingIdlistingId", listingId);
+        const docRef = await addDoc(collection(db, "nfts"), {
+          ...auction,
+          seller: address,
+          category: category,
+          listingId: listingId.toString(),
+        });
+        console.log("doc ref", docRef);
+        router.push("/");
       }
+
       // createDirectListing({
       //   assetContractAddress: contractAddress,
       //   buyoutPricePerToken: buyoutPrice,
@@ -264,6 +323,22 @@ const Create: NextPage = () => {
           />
         )}
 
+        {/* make a select options input for nft categories */}
+
+        <select
+          name="category"
+          id="category"
+          className="w-full p-4 rounded border border-[#696969] bg-transparent outline-none text-white"
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+        >
+          <option value="Art">Art</option>
+          <option value="Gaming">Gaming</option>
+          <option value="Sports">Sports</option>
+          <option value="Photography">Photography</option>
+          <option value="Music">Music</option>
+          <option value="Virtual Worlds">Virtual Worlds</option>
+        </select>
         <button
           onClick={(e) => handleCreateListing(e)}
           className="walletConnectButton px-[36px] py-3 rounded-xl text-white"

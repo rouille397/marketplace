@@ -14,17 +14,27 @@ import circleIcon from "../public/images/circle.svg";
 import NftStep from "../components/NftStep";
 import { CATEGORIES, NFT_STEPS } from "../constants";
 import { useSigner } from "wagmi";
+import {
+  getFirestore,
+  query,
+  where,
+  collection,
+  getDocs,
+} from "firebase/firestore";
+import { db } from "@/helpers/firebase-config";
 
 export default function Home() {
   const [recentlyAdded, setRecentlyAdded] = useState<any>([]);
   const [recentlySold, setRecentlySold] = useState<any>([]);
   const [allListingData, setAllListingData] = useState<any>([]);
+  const [filteredListingData, setFilteredListingData] = useState<any>([]);
   const [listingPagination, setListingPagination] = useState<any>({
     count: 10, // Number of auctions to fetch
     start: 0, // Start from this index (pagination)
   });
   const [contract, setContract] = useState<any>(null);
   const [currentBlockNum, setCurrentBlockNum] = useState<any>(null);
+  const [selectedType, setSelectedType] = useState<any>(null);
 
   const [listingLoading, setListingLoading] = useState(false);
   const [recentlyAddedLoading, setRecentlyAddedLoading] = useState(false);
@@ -62,19 +72,71 @@ export default function Home() {
     (async () => {
       try {
         setListingLoading(true);
+        const totalCount = await contract.getTotalCount();
+        console.log("totalCount", totalCount);
         const listings = await contract.getActiveListings({
-          start: listingPagination.start,
-          count: listingPagination.count,
+          start: +totalCount.toString() - 20,
+          count: +totalCount.toString(),
         });
-        setAllListingData(listings);
+        console.log("listingData", listings);
+        //fetch nfts data from firebase, fetch nfts with listingId equals to listings
+        let listingIds = listings.map((item: any) => item.id.toString());
+        console.log("listingIds", listingIds);
+        const queryRef = query(
+          collection(db, "nfts"),
+          where("listingId", "in", listingIds)
+        );
+        const querySnapshot = await getDocs(queryRef);
+        let nftsDataFromFirebase: any = [];
+        querySnapshot.forEach((doc) => {
+          // doc.data() is never undefined for query doc snapshots
+          nftsDataFromFirebase.push(doc.data());
+        });
+        console.log("nftsDataFromFirebase", nftsDataFromFirebase);
+        //now take category info from data returned by firebase and add in respecting listing
+        let finalListingData: any = [];
+        listings.forEach((item: any) => {
+          let nftData = nftsDataFromFirebase.find(
+            (nft: any) => nft.listingId == item.id.toString()
+          );
+          console.log("nftDatatest", nftData);
+          if (nftData) {
+            finalListingData.push({
+              ...item,
+              category: nftData.category,
+            });
+          }
+        });
+
+        setAllListingData(finalListingData);
         setListingLoading(false);
-        console.log("listingsss", listings);
+        console.log("listingsss", finalListingData);
       } catch (e) {
         console.log("listingError", e);
         setListingLoading(false);
       }
     })();
   }, [contract, listingPagination]);
+
+  // get the nfts category info
+  useEffect(() => {
+    if (!allListingData) return;
+    (async () => {
+      setListingLoading(true);
+      let filteredData: any = [];
+      if (selectedType) {
+        filteredData = allListingData.filter(
+          (item: any) =>
+            item.category.toLowerCase() == selectedType.toLowerCase()
+        );
+      } else {
+        filteredData = allListingData;
+      }
+      console.log("filteredData", filteredData, selectedType, allListingData);
+      setFilteredListingData(filteredData);
+      setListingLoading(false);
+    })();
+  }, [allListingData, selectedType]);
 
   //recently listed
   useEffect(() => {
@@ -230,8 +292,17 @@ export default function Home() {
             Explore Marketplace
           </h1>
           <div className="flex justify-start lg:justify-center items-center gap-5 mb-12 overflow-x-scroll ">
-            {CATEGORIES?.map((category, i) => (
-              <Button key={category} type="rounded" className="">
+            {CATEGORIES?.map((category) => (
+              <Button
+                key={category}
+                type="rounded"
+                className=""
+                onClick={() => {
+                  category == "All"
+                    ? setSelectedType(null)
+                    : setSelectedType(category);
+                }}
+              >
                 {category}
               </Button>
             ))}
@@ -241,8 +312,8 @@ export default function Home() {
             <Loading isLoading={listingLoading} />
           ) : (
             <div className="flex w-full overflow-x-scroll md:overflow-auto md:grid grid-cols-3 min-[1390px]:grid-cols-4 gap-6 ">
-              {allListingData &&
-                allListingData?.map((item: any) => (
+              {filteredListingData &&
+                filteredListingData?.map((item: any) => (
                   <NftCard
                     key={item.id}
                     name={item.asset.name}
