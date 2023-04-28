@@ -29,20 +29,22 @@ const Navbar: FC = () => {
 
   return (
     <div
-      className={`px-4 flex justify-between items-center lg:px-[78px] w-full fixed z-10 py-4 ${
+      className={`px-4 flex justify-between items-center lg:px-[78px] w-full fixed z-10 py-4  ${
         color ? "bg-night py-2" : "bg-transparent"
       }`}
     >
-      <div className="flex items-center gap-2">
-        <Image
-          src={logo}
-          alt="NITFEE"
-          className="w-[46px] h-[48px] lg:w-[72px] lg:h-[70px] object-contain"
-        />
-        <h1 className="text-2xl text-white lg:text-[32px] font-bold uppercase">
-          NITFEE
-        </h1>
-      </div>
+      <Link href="/">
+        <div className="flex items-center gap-2">
+          <Image
+            src={logo}
+            alt="NITFEE"
+            className="w-[46px] h-[48px] lg:w-[72px] lg:h-[70px] object-contain"
+          />
+          <h1 className="text-2xl text-white lg:text-[32px] font-bold uppercase">
+            NITFEE
+          </h1>
+        </div>
+      </Link>
       <div className="hidden lg:flex gap-9">
         {NAVBAR?.map((item) => (
           <Link
@@ -69,9 +71,11 @@ const Navbar: FC = () => {
           </Button>
         </a>
         {address && (
-          <p className="font-medium text-white px-6 py-3 rounded-xl border border-[#141B22] min-w-[154px]">
-            {address?.slice(0, 6).concat("...").concat(address?.slice(-4))}
-          </p>
+          <Link href={`/user/${address}`}>
+            <p className="font-medium text-white px-6 py-3 rounded-xl border border-[#141B22] min-w-[154px]">
+              {address?.slice(0, 6).concat("...").concat(address?.slice(-4))}
+            </p>
+          </Link>
         )}
         <Button
           className="uppercase font-bold text-base text-white flex gap-2 items-center px-6 py-3 rounded-xl walletConnectButton"

@@ -12,6 +12,7 @@ import {
   useMetamask,
 } from "@thirdweb-dev/react";
 import { useAccount } from "wagmi";
+import Link from "next/link";
 
 const Header = () => {
   const { address } = useAccount();
@@ -86,9 +87,14 @@ const Header = () => {
           </div>
           <div className="mt-4 flex justify-center">
             {address && (
-              <p className="font-medium text-white px-6 py-3 rounded-xl border border-[#696969] w-[154px]">
-                {address?.slice(0, 6).concat("...").concat(address?.slice(-4))}
-              </p>
+              <Link href={`/user/${address}`}>
+                <p className="font-medium text-white px-6 py-3 rounded-xl border border-[#696969] w-[154px]">
+                  {address
+                    ?.slice(0, 6)
+                    .concat("...")
+                    .concat(address?.slice(-4))}
+                </p>
+              </Link>
             )}
           </div>
         </div>

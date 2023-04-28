@@ -1,5 +1,6 @@
+import { MarketplaceAddr } from "@/addresses";
 import { Chain } from "wagmi/chains";
-import { MarketplaceAddr } from "../constants";
+
 
 export const Conflux_Testnet: Chain | any = {
   id: 71,

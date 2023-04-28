@@ -13,6 +13,7 @@ interface INftCarouselProps {
         symbol: string;
         user: string;
         image: string | null | undefined;
+        soldOut: boolean;
       }[]
     | any;
 }
@@ -21,7 +22,10 @@ const NftCarousel: FC<INftCarouselProps> = ({ listing }) => {
   const { push } = useRouter();
 
   return (
-    <Slider {...settings} className="flex gap-4 md:block">
+    <Slider
+      {...settings}
+      className="grid grid-rows-1 xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-2 grid-cols-1"
+    >
       {listing?.map((item: any) => (
         <Card
           key={item.name}

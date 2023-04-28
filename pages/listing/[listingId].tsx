@@ -1,5 +1,13 @@
+import { db } from "@/helpers/firebase-config";
 import { MediaRenderer, useListing, useSDK } from "@thirdweb-dev/react";
 import { utils } from "ethers";
+import {
+  collection,
+  getDocs,
+  query,
+  updateDoc,
+  where,
+} from "firebase/firestore";
 import type { NextPage } from "next";
 import Image from "next/image";
 import { useRouter } from "next/router";
@@ -14,6 +22,7 @@ const ListingPage: NextPage = () => {
   const [winningBid, setWinningBid] = useState<any>(null);
   const [secondsTillEnd, setSecondsTillEnd] = useState<any>(null);
   const [winnerAddress, setWinnerAddress] = useState("");
+  const [alreadySold, setAlreadySold] = useState(0);
   const router = useRouter();
   const { address } = useAccount();
   const sdk = useSDK();
@@ -25,65 +34,32 @@ const ListingPage: NextPage = () => {
     const getContract = async () => {
       const contract = await sdk.getContract(MarketplaceAddr, "marketplace");
       setContract(contract);
+      // get listing data from firebase
+      const q = query(
+        collection(db, "nfts"),
+        where("listingId", "==", listingId)
+      );
+      const querySnapshot = await getDocs(q);
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        if (data.soldAt) {
+          setAlreadySold(data.soldAt);
+        }
+      });
     };
     getContract();
   }, [sdk]);
 
-  // Fetch the listing from the marketplace contract
   const { data: listing, isLoading: loadingListing } = useListing(
     contract,
     listingId
   );
 
-  // Store the bid amount the user entered into the bidding textbox
   const [bidAmount, setBidAmount] = useState<string>("");
-
-  //hook to call the makeOffer function in direct listing
-  //   const { mutateAsync: makeOffer, isLoading: makeOfferLoading } =
-  //     useMakeOffer(contract);
-
-  //hook to call the makeBid function in auction listing
-
-  //get all direct listing offers
-  //   const { data: offers } = useOffers(contract, listingId);
-  //   console.log(offers, "offerss");
-
-  //what percentage higher the next bid must be than the current highest bid, or the starting price if there are no bids.
-  //   const { data: bidBuffer, isLoading: bidBufferLoading } = useBidBuffer(
-  //     contract,
-  //     listingId
-  //   );
-  //   console.log(bidBuffer?.toString(), "bidBuffer");
-
-  // minimum value a bid must be to be valid in an auction listing
-
-  //get the auction winner
 
   console.log("contractt", contract);
 
   console.log(listing, "listingData");
-  //   async function createBidOrOffer() {
-  //     try {
-  //       if (listing?.type == 0) {
-  //         // await makeOffer({
-  //         //   listingId: +listingId, // ID of the listing to make an offer on
-  //         //   pricePerToken: +bidAmount, // Price per token to offer (in the listing's currency)
-  //         //   quantity: 1, // Number of NFTs you want to buy (used for ERC1155 NFTs)
-  //         // });
-  //       } else {
-  //         // If the listing type is an auction listing, then we can create a bid.
-  //         await contract.auction.makeBid(listingId, bidAmount);
-  //       }
-  //       alert(
-  //         `${
-  //           listing?.type === ListingType.Auction ? "Bid" : "Offer"
-  //         } created successfully!`
-  //       );
-  //     } catch (error) {
-  //       console.error(error);
-  //       alert(error);
-  //     }
-  //   }
   const createBidHandler = async () => {
     if (
       !contract ||
@@ -99,7 +75,7 @@ const ListingPage: NextPage = () => {
         bidAmount
       );
       const gasLimit = await tx.estimateGasLimit(); // Estimate the gas limit
-      tx.setGasLimit(Math.floor(gasLimit.toString() * 1.2));
+      tx.setGasLimit(Math.floor(gasLimit.toString() * 1.6));
       tx = await tx.execute(); // Execute the transaction
       alert("Bid created successfully!");
       minimumNextBid();
@@ -113,8 +89,22 @@ const ListingPage: NextPage = () => {
     try {
       let tx: any = await contract?.buyoutListing.prepare(listingId, 1);
       const gasLimit = await tx.estimateGasLimit(); // Estimate the gas limit
-      tx.setGasLimit(Math.floor(gasLimit.toString() * 1.2));
+      tx.setGasLimit(Math.floor(gasLimit.toString() * 1.6));
       tx = await tx.execute(); // Execute the transaction
+      // get the nft from nfts collection in firebase and add soldAt field
+
+      const q = query(
+        collection(db, "nfts"),
+        where("listingId", "==", listingId)
+      );
+      const querySnapshot = await getDocs(q);
+      querySnapshot.forEach(async (doc) => {
+        await updateDoc(doc.ref, {
+          soldAt: new Date().getTime(),
+          buyer: address,
+        });
+      });
+
       alert("NFT bought successfully!");
       router.push("/");
     } catch (error) {
@@ -129,7 +119,7 @@ const ListingPage: NextPage = () => {
       if (listing?.type === 0) {
         let tx: any = await contract.direct.cancelListing.prepare(listingId);
         const gasLimit = await tx.estimateGasLimit(); // Estimate the gas limit
-        tx.setGasLimit(Math.floor(gasLimit.toString() * 1.2));
+        tx.setGasLimit(Math.floor(gasLimit.toString() * 1.6));
         tx = await tx.execute(); // Execute the transaction
 
         console.log(tx, "txResult");
@@ -138,7 +128,7 @@ const ListingPage: NextPage = () => {
       } else {
         let tx: any = await contract.auction.cancelListing.prepare(listingId);
         const gasLimit = await tx.estimateGasLimit(); // Estimate the gas limit
-        await tx.setGasLimit(Math.floor(gasLimit.toString() * 1.2));
+        await tx.setGasLimit(Math.floor(gasLimit.toString() * 1.6));
         tx = await tx.execute(); // Execute the transaction
         alert("Listing cancelled successfully!");
       }
@@ -426,6 +416,18 @@ const ListingPage: NextPage = () => {
                 </span>
               </p>
             </div>
+            <div className="mt-2">
+              {alreadySold > 0 && (
+                <p>
+                  <b className="font-extrabold md:text-xl text-base leading-6 capitalize tracking-wide mr-2">
+                    Sold At:
+                  </b>
+                  <span className="text-[#878788] font-normal md:text-xl text-base ">
+                    {new Date(alreadySold).toLocaleString()}
+                  </span>
+                </p>
+              )}
+            </div>
             <hr className="md:my-6 my-3.5 border border-slate-700" />
             <div className="">
               {
@@ -486,13 +488,17 @@ const ListingPage: NextPage = () => {
                   style={{ borderStyle: "none" }}
                   className="uppercase font-bold text-base text-white gap-2 px-6 py-3 rounded-xl walletConnectButton  text-center !flex !items-center !justify-center flex-1 md:w-auto w-full  max-w-[618px]"
                   onClick={buyNft}
-                  disabled={secondsTillEnd < 0}
+                  disabled={secondsTillEnd < 0 || alreadySold > 0}
                 >
-                  <span>
-                    BUY IT NOW ({" "}
-                    {listing.buyoutCurrencyValuePerToken.displayValue}{" "}
-                    {listing.buyoutCurrencyValuePerToken.symbol})
-                  </span>
+                  {alreadySold > 0 ? (
+                    "Sold Out"
+                  ) : (
+                    <span>
+                      BUY IT NOW ({" "}
+                      {listing.buyoutCurrencyValuePerToken.displayValue}{" "}
+                      {listing.buyoutCurrencyValuePerToken.symbol})
+                    </span>
+                  )}
                 </button>
               )}
 

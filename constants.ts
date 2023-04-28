@@ -1,7 +1,7 @@
 export const NAVBAR = [
     { name: "Home", link: "/" },
     // { name: "COLLECTION", link: "" },
-    { name: "List NFT", link: "/create" },
+    { name: "Post Collection", link: "/collection/new" },
   ];
   
   export const NFT_STEPS = [

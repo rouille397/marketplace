@@ -14,31 +14,29 @@ import circleIcon from "../public/images/circle.svg";
 import NftStep from "../components/NftStep";
 import { CATEGORIES, NFT_STEPS } from "../constants";
 import { useSigner } from "wagmi";
+
 import {
-  getFirestore,
   query,
   where,
   collection,
   getDocs,
+  limit,
+  orderBy,
 } from "firebase/firestore";
 import { db } from "@/helpers/firebase-config";
+import Link from "next/link";
 
 export default function Home() {
   const [recentlyAdded, setRecentlyAdded] = useState<any>([]);
   const [recentlySold, setRecentlySold] = useState<any>([]);
-  const [allListingData, setAllListingData] = useState<any>([]);
-  const [filteredListingData, setFilteredListingData] = useState<any>([]);
-  const [listingPagination, setListingPagination] = useState<any>({
-    count: 10, // Number of auctions to fetch
-    start: 0, // Start from this index (pagination)
-  });
   const [contract, setContract] = useState<any>(null);
   const [currentBlockNum, setCurrentBlockNum] = useState<any>(null);
   const [selectedType, setSelectedType] = useState<any>(null);
 
-  const [listingLoading, setListingLoading] = useState(false);
   const [recentlyAddedLoading, setRecentlyAddedLoading] = useState(false);
   const [recentlySoldLoading, setRecentlySoldLoading] = useState(false);
+  const [allCollectionLoading, setAllCollectionLoading] = useState(false);
+  const [allCollectionsData, setAllCollectionsData] = useState<any>([]);
 
   const { data: signer } = useSigner();
   const provider = signer?.provider;
@@ -66,184 +64,118 @@ export default function Home() {
     })();
   }, [sdk]);
 
-  useEffect(() => {
-    if (!contract) return;
-
-    (async () => {
-      try {
-        setListingLoading(true);
-        const totalCount = await contract.getTotalCount();
-        console.log("totalCount", totalCount);
-        const listings = await contract.getActiveListings({
-          start: +totalCount.toString() - 20,
-          count: +totalCount.toString(),
-        });
-        console.log("listingData", listings);
-        //fetch nfts data from firebase, fetch nfts with listingId equals to listings
-        let listingIds = listings.map((item: any) => item.id.toString());
-        console.log("listingIds", listingIds);
-        const queryRef = query(
-          collection(db, "nfts"),
-          where("listingId", "in", listingIds)
-        );
-        const querySnapshot = await getDocs(queryRef);
-        let nftsDataFromFirebase: any = [];
-        querySnapshot.forEach((doc) => {
-          // doc.data() is never undefined for query doc snapshots
-          nftsDataFromFirebase.push(doc.data());
-        });
-        console.log("nftsDataFromFirebase", nftsDataFromFirebase);
-        //now take category info from data returned by firebase and add in respecting listing
-        let finalListingData: any = [];
-        listings.forEach((item: any) => {
-          let nftData = nftsDataFromFirebase.find(
-            (nft: any) => nft.listingId == item.id.toString()
-          );
-          console.log("nftDatatest", nftData);
-          if (nftData) {
-            finalListingData.push({
-              ...item,
-              category: nftData.category,
-            });
-          }
-        });
-
-        setAllListingData(finalListingData);
-        setListingLoading(false);
-        console.log("listingsss", finalListingData);
-      } catch (e) {
-        console.log("listingError", e);
-        setListingLoading(false);
-      }
-    })();
-  }, [contract, listingPagination]);
-
-  // get the nfts category info
-  useEffect(() => {
-    if (!allListingData) return;
-    (async () => {
-      setListingLoading(true);
-      let filteredData: any = [];
-      if (selectedType) {
-        filteredData = allListingData.filter(
-          (item: any) =>
-            item.category.toLowerCase() == selectedType.toLowerCase()
-        );
-      } else {
-        filteredData = allListingData;
-      }
-      console.log("filteredData", filteredData, selectedType, allListingData);
-      setFilteredListingData(filteredData);
-      setListingLoading(false);
-    })();
-  }, [allListingData, selectedType]);
-
   //recently listed
   useEffect(() => {
-    if (!contract || !currentBlockNum || recentlyAdded.length > 0) return;
     (async () => {
-      setListingLoading(true);
-
-      let currentBlock = currentBlockNum;
-      //get 5% of the block number
-      let from = currentBlock - Math.floor(currentBlock * 0.03);
-      let tryCount = 0;
-      let newlyAddedNFTs: any = [];
-      console.log("check1");
-      while (tryCount < 5 && newlyAddedNFTs.length < 5) {
-        try {
-          let newlyAdded = await contract?.events.getEvents("ListingAdded", {
-            // fromBlock: from,
-            // toBlock: currentBlock,
-            order: "desc",
-          });
-          console.log("newlyAddedids", newlyAdded);
-          newlyAddedNFTs = [...newlyAddedNFTs, ...newlyAdded];
-          if (newlyAddedNFTs.length > 5) break;
-          currentBlock = from;
-          from = from - Math.floor(currentBlock * 0.03);
-          tryCount++;
-        } catch (e) {
-          console.log("errorrrrr", e);
-          continue;
-        }
-      }
-      let listingIds = newlyAddedNFTs.map((item: any) =>
-        item.data.listingId.toString()
-      );
-
-      let listingDataPromises: any = [];
-      listingIds.forEach((id: any) => {
-        listingDataPromises.push(contract?.getListing(id));
+      if (!contract || recentlyAdded.length > 0 || !currentBlockNum) return;
+      setRecentlyAddedLoading(true);
+      const nftsRef = collection(db, "nfts");
+      const q = query(nftsRef, orderBy("listingId", "desc"), limit(20));
+      const querySnapshot = await getDocs(q);
+      const nfts = querySnapshot.docs.map((doc) => doc.data());
+      console.log("nfts", nfts);
+      // get nft ids
+      const nftIds = nfts.map((nft) => nft.listingId);
+      console.log("nftIds", nftIds);
+      // get nft data
+      const nftDataPromises: any = [];
+      nftIds.forEach((id: any) => {
+        nftDataPromises.push(contract?.getListing(id));
       });
       let results = await Promise.all(
-        listingDataPromises.map((p: any) => p.catch((e: any) => e))
+        nftDataPromises.map((p: any) => p.catch((e: any) => e))
       );
       const validResults = results.filter(
         (result: any) => !(result instanceof Error)
       );
-
-      console.log("newlyAddedNFTs", validResults);
+      console.log("validResults", validResults);
       setRecentlyAdded(validResults);
-      setListingLoading(false);
+      setRecentlyAddedLoading(false);
     })();
-  }, [contract, currentBlockNum]);
+  }, [contract]);
 
   // //this useEffect will find recently sold NFTS
   useEffect(() => {
     (async () => {
       if (!contract || recentlySold.length > 0 || !currentBlockNum) return;
       setRecentlySoldLoading(true);
-      let currentBlock = currentBlockNum;
-      //get 5% of the block number
-      let from = currentBlock - Math.floor(currentBlock * 0.03);
-      let tryCount = 0;
-      let recentlySoldNfts: any = [];
-
-      while (tryCount < 5 && recentlySoldNfts.length < 5) {
-        console.log("tryCount", tryCount);
-        try {
-          let recentlySoldd = await contract?.events.getEvents("NewSale", {
-            fromBlock: 0,
-            toBlock: currentBlock,
-            order: "desc",
-          });
-          console.log("recentlySoldd", recentlySoldd);
-          recentlySoldNfts = [...recentlySoldNfts, ...recentlySoldd];
-          if (recentlySoldNfts.length > 5) break;
-          currentBlock = from;
-          from = from - Math.floor(currentBlock * 0.03);
-
-          tryCount++;
-        } catch (e) {
-          continue;
-        }
-      }
-
-      console.log("recentlySoldNftEvents", recentlySoldNfts);
-      let listingIds = recentlySoldNfts.map((item: any) =>
-        item.data.listingId.toString()
+      // get nfts from nfts collection in firebase where soldAt exists, get them in descending order
+      const nftsRef = collection(db, "nfts");
+      const q = query(
+        nftsRef,
+        where("soldAt", "!=", null),
+        orderBy("soldAt", "desc"),
+        limit(20)
       );
-
-      let listingDataPromises: any = [];
-      listingIds.forEach((id: any) => {
-        listingDataPromises.push(contract?.getListing(id));
+      const querySnapshot = await getDocs(q);
+      const nfts = querySnapshot.docs.map((doc) => doc.data());
+      console.log("nftssoldout", nfts);
+      // get nft ids
+      const nftIds = nfts.map((nft) => nft.listingId);
+      console.log("nftIds", nftIds);
+      // get nft data
+      const nftDataPromises: any = [];
+      nftIds.forEach((id: any) => {
+        nftDataPromises.push(contract?.getListing(id));
       });
       let results = await Promise.all(
-        listingDataPromises.map((p: any) => p.catch((e: any) => e))
+        nftDataPromises.map((p: any) => p.catch((e: any) => e))
       );
-      let validResults = results.filter(
+      const validResults = results.filter(
         (result: any) => !(result instanceof Error)
       );
-      validResults = validResults.map((item: any) => ({ ...item, sold: true }));
+      console.log("validResults", validResults);
       setRecentlySold(validResults);
       setRecentlySoldLoading(false);
-      console.log("recentlySoldNfts", validResults);
     })();
-  }, [contract, currentBlockNum]);
+  }, [contract]);
 
   console.log("recentlyAdded", recentlyAdded);
 
+  useEffect(() => {
+    //only get collections in which collection.nfts.length > 0
+    (async () => {
+      if (!selectedType) {
+        setAllCollectionLoading(true);
+        const collectionRef = collection(db, "collections");
+        const q = query(
+          collectionRef,
+          where("noNft", "==", false),
+          orderBy("createdAt", "desc"),
+          limit(10)
+        );
+        const collectionSnapshot = await getDocs(q);
+        const collectionList = collectionSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        console.log("collectionList", collectionList);
+        setAllCollectionsData(collectionList);
+        setAllCollectionLoading(false);
+      }
+      if (selectedType) {
+        setAllCollectionLoading(true);
+
+        const collectionRef = collection(db, "collections");
+        const q = query(
+          collectionRef,
+          where("category", "==", selectedType),
+          where("noNft", "==", false),
+          orderBy("createdAt", "desc"),
+          limit(10)
+        );
+        const collectionSnapshot = await getDocs(q);
+        const collectionList = collectionSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setAllCollectionsData(collectionList);
+        setAllCollectionLoading(false);
+        console.log("collectionList", collectionList);
+      }
+    })();
+  }, [selectedType]);
+  console.log("allCollectionsData", allCollectionsData);
   return (
     <>
       <Head>
@@ -287,16 +219,20 @@ export default function Home() {
           </div>
         </div>
         {/* Explore Marketplace */}
-        <div className="px-6 my-[60px] lg:my-[120px] md:px-[75px] min-h-[600px]">
+        <div
+          className={`px-6 my-[60px] lg:my-[120px] md:px-[75px] ${
+            allCollectionsData.length == 0 ? "min-h-[300px]" : "min-h-[600px]"
+          } `}
+        >
           <h1 className="text-[32px] lg:text-[59px] font-semibold text-white text-center mb-12">
             Explore Marketplace
           </h1>
-          <div className="flex justify-start lg:justify-center items-center gap-5 mb-12 overflow-x-scroll ">
+          <div className="flex justify-start lg:justify-center items-center gap-5 md:mb-12 mb-8 overflow-x-scroll ">
             {CATEGORIES?.map((category) => (
               <Button
                 key={category}
                 type="rounded"
-                className=""
+                className="md:w-auto"
                 onClick={() => {
                   category == "All"
                     ? setSelectedType(null)
@@ -308,29 +244,176 @@ export default function Home() {
             ))}
           </div>
 
-          {listingLoading ? (
-            <Loading isLoading={listingLoading} />
+          {allCollectionLoading ? (
+            <Loading isLoading={allCollectionLoading} />
           ) : (
-            <div className="flex w-full overflow-x-scroll md:overflow-auto md:grid grid-cols-3 min-[1390px]:grid-cols-4 gap-6 ">
-              {filteredListingData &&
-                filteredListingData?.map((item: any) => (
-                  <NftCard
-                    key={item.id}
-                    name={item.asset.name}
-                    user={"@user"}
-                    symbol={item.buyoutCurrencyValuePerToken.symbol}
-                    price={item.buyoutCurrencyValuePerToken.displayValue}
-                    image={item.asset.image}
-                    onClick={() => router.push(`/listing/${item.id}`)}
-                  />
-                ))}
+            <div className="flex flex-col md:gap-6 gap-3 md:mt-20 items-center justify-center">
+              <div className="flex w-full md:gap-6 gap-3 md:flex-row flex-col">
+                {allCollectionsData[0] && (
+                  // show listing count when we hover over parent
+                  <Link
+                    href={`/collection/${allCollectionsData[0].collectionAddress}`}
+                  >
+                    <div className="md:flex-1 md:h-72 h-40 rounded-lg relative group ">
+                      <img
+                        src={allCollectionsData[0].image}
+                        className="w-full h-full object-cover"
+                        alt="marketplan"
+                      />
+                      {/* show listing count which is collection.nfts.length when hover over parent */}
+                      <div className="absolute bottom-0 left-0 w-full h-full bg-gradient-to-t from-black to-transparent hidden justify-center items-center group-hover:flex cursor-pointer">
+                        <div className="text-center">
+                          <p className="font-semibold md:text-2xl text-base ">
+                            {allCollectionsData[0].name}
+                          </p>
+                          <p className="text-white md:text-[18px] text-sm font-semibold">
+                            {allCollectionsData[0].nfts.length} Listings
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                )}
+                {allCollectionsData[0] && (
+                  <Link
+                    href={`/collection/${allCollectionsData[0].collectionAddress}`}
+                  >
+                    <div className="md:flex-1 md:h-72 h-40 rounded-lg relative group ">
+                      {allCollectionsData[1]?.image && (
+                        <>
+                          <img
+                            src={allCollectionsData[1].image}
+                            className="w-full h-full object-cover"
+                            alt="marketplan"
+                          />
+                          {/* show listing count which is collection.nfts.length when hover over parent */}
+                          <div className="absolute bottom-0 left-0 w-full h-full bg-gradient-to-t from-black to-transparent hidden justify-center items-center group-hover:flex cursor-pointer">
+                            <div className="text-center">
+                              <p className="font-semibold md:text-2xl text-base ">
+                                {allCollectionsData[1].name}
+                              </p>
+                              <p className="text-white md:text-[18px] text-sm font-semibold">
+                                {allCollectionsData[1].nfts.length} Listings
+                              </p>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </Link>
+                )}
+              </div>
+              {allCollectionsData[2] && (
+                <div className="justify-center grid md:grid-cols-3 grid-cols-2 md:grid-rows-1 grid-rows-2 w-full md:h-72 md:gap-6 gap-3 h-72 ">
+                  {allCollectionsData[2] && (
+                    <Link
+                      href={`/collection/${allCollectionsData[2].collectionAddress}`}
+                    >
+                      <div className="rounded-lg w-full h-full group cursor-pointer relative">
+                        <img
+                          src={allCollectionsData[2].image}
+                          className="w-full h-full object-cover"
+                          alt="marketplan"
+                        />
+
+                        {/* show listing count which is collection.nfts.length when hover over parent */}
+                        <div className="absolute bottom-0 left-0 w-full h-full bg-gradient-to-t from-black to-transparent hidden justify-center items-center group-hover:flex cursor-pointer">
+                          <div className="text-center">
+                            <p className="font-semibold md:text-2xl text-base ">
+                              {allCollectionsData[2].name}
+                            </p>
+                            <p className="text-white md:text-[18px] text-sm font-semibold">
+                              {allCollectionsData[2].nfts.length} Listings
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  )}
+                  {allCollectionsData[3] && (
+                    <Link
+                      href={`/collection/${allCollectionsData[3].collectionAddress}`}
+                    >
+                      <div className="rounded-lg w-full h-full group cursor-pointer relative">
+                        <img
+                          src={allCollectionsData[3].image}
+                          className="w-full h-full object-cover"
+                          alt="marketplan"
+                        />
+                        <div className="absolute bottom-0 left-0 w-full h-full bg-gradient-to-t from-black to-transparent hidden justify-center items-center group-hover:flex cursor-pointer">
+                          <div className="text-center">
+                            <p className="font-semibold md:text-2xl text-base ">
+                              {allCollectionsData[3].name}
+                            </p>
+                            <p className="text-white md:text-[18px] text-sm font-semibold">
+                              {allCollectionsData[3].nfts.length} Listings
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  )}
+                  {allCollectionsData[4] && (
+                    <Link
+                      href={`/collection/${allCollectionsData[4].collectionAddress}`}
+                    >
+                      <div className="rounded-lg w-full h-full group cursor-pointer relative">
+                        <img
+                          src={allCollectionsData[4].image}
+                          className="w-full h-full object-cover"
+                          alt="marketplan"
+                        />
+                        <div className="absolute bottom-0 left-0 w-full h-full bg-gradient-to-t from-black to-transparent hidden justify-center items-center group-hover:flex cursor-pointer">
+                          <div className="text-center">
+                            <p className="font-semibold md:text-2xl text-base ">
+                              {allCollectionsData[4].name}
+                            </p>
+                            <p className="text-white md:text-[18px] text-sm font-semibold">
+                              {allCollectionsData[4].nfts.length} Listings
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  )}
+                  {allCollectionsData[5] && (
+                    <Link
+                      href={`/collection/${allCollectionsData[5].collectionAddress}`}
+                    >
+                      <div className="bg-stone-200 rounded-lg md:hidden  w-full h-full group">
+                        <img
+                          src={allCollectionsData[5].image}
+                          className="w-full h-full object-cover"
+                          alt="marketplan"
+                        />
+                        <div className="absolute bottom-0 left-0 w-full h-full bg-gradient-to-t from-black to-transparent hidden justify-center items-center group-hover:flex cursor-pointer">
+                          <div className="text-center">
+                            <p className="font-semibold md:text-2xl text-base ">
+                              {allCollectionsData[5].name}
+                            </p>
+                            <p className="text-white md:text-[18px] text-sm font-semibold">
+                              {allCollectionsData[5].nfts.length} Listings
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  )}
+                </div>
+              )}
             </div>
           )}
-          {/* {!directLoading && (
+          {allCollectionsData.length == 0 && !allCollectionLoading && (
+            <p className="text-center relative top-10">no collection to show</p>
+          )}
+          {/* TODO change it */}
+          {!allCollectionLoading && allCollectionsData.length > 3 && (
             <div className="text-center mt-12">
-              <Button type="rounded">View More</Button>
+              <Link href="/collection/all">
+                <Button type="rounded">View More</Button>
+              </Link>
             </div>
-          )} */}
+          )}
         </div>
         {/* Newly listed */}
 
@@ -356,7 +439,14 @@ export default function Home() {
           {recentlySoldLoading ? (
             <Loading isLoading={recentlySoldLoading} />
           ) : (
-            <NftCarousel listing={recentlySold} />
+            <div className="max-h-[500px] overflow-hidden">
+              <NftCarousel
+                listing={recentlySold.map((l: any) => ({
+                  ...l,
+                  sold: true,
+                }))}
+              />
+            </div>
           )}
         </div>
         {/* Contact us */}

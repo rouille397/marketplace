@@ -1,4 +1,4 @@
-import { MediaRenderer } from "@thirdweb-dev/react";
+import Image from "next/image";
 import React, { FC } from "react";
 import Button from "../Button";
 
@@ -7,11 +7,20 @@ interface INftCardProps {
   price: string | number | null | undefined;
   symbol: string;
   user: string;
-  image: string | null | undefined;
+  image: string;
+  type: string | null | undefined;
   onClick: () => void;
 }
 
-const NftCard: FC<INftCardProps> = ({ name, image, price, symbol, user, onClick }) => {
+const NftCard: FC<INftCardProps> = ({
+  name,
+  image,
+  price,
+  symbol,
+  user,
+  onClick,
+  type,
+}) => {
   return (
     <div
       className="nft-card flex flex-shrink-0 flex-grow-0 basis-[300px] md:flex-shrink-[auto] md:flex-grow-[auto] md:basis-[auto] flex-col items-center gap-[27px] px-[10px] py-[15px]  w-[297px] h-[425px] rounded-[20px] bg-[#FFFFFF1A] lg:mb-11"
@@ -19,10 +28,7 @@ const NftCard: FC<INftCardProps> = ({ name, image, price, symbol, user, onClick 
     >
       {name && (
         <img
-          src={
-            image ||
-            "https://ipfs.thirdwebcdn.com/ipfs/QmXodQe3XXXhL55wfbLt3T2kAhXuBbHp1TLHcqyEjYBC9w/img_subdao.png"
-          }
+          src={image}
           alt={""}
           className="w-[276px] h-[307px] rounded-[14px] object-cover"
         />
@@ -37,7 +43,7 @@ const NftCard: FC<INftCardProps> = ({ name, image, price, symbol, user, onClick 
         <p className="text-xs font-normal text-white">{user}</p>
       </div>
       <Button className="hidden text-[19px] font-medium text-white rounded-xl w-full py-4  collect-button">
-        Collect Now
+        {type ? "List NFTs" : "Collect Now"}
       </Button>
     </div>
   );

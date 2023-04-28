@@ -1,5 +1,4 @@
 import { TransactionResult } from "@thirdweb-dev/sdk";
-import type { NextPage } from "next";
 import { useRouter } from "next/router";
 import { MarketplaceAddr } from "../addresses";
 import { useState } from "react";
@@ -9,16 +8,24 @@ import { ethers } from "ethers";
 import marketplaceABI from "../helpers/marketplaceAbi.json";
 import { useContract, useCreateDirectListing } from "@thirdweb-dev/react";
 
-import { collection, addDoc, query, where, getDocs } from "firebase/firestore";
+import {
+  collection,
+  addDoc,
+  query,
+  where,
+  getDocs,
+  updateDoc,
+} from "firebase/firestore";
 import { db } from "../helpers/firebase-config";
+import { useEffect } from "react";
 
 // useActiveChain, useSwitchChain, useChainId
 
-const Create: NextPage = () => {
+const Create = () => {
   // Next JS Router hook to redirect to other pages
   const router = useRouter();
+  const { colectionAddr } = router.query;
   const [active, setActive] = useState("directListing");
-  const [contractAddress, setContractAddress] = useState("");
   const [tokenId, setTokenId] = useState("");
   const [quantity, setQuantity] = useState("");
   const [directPrice, setDirectPrice] = useState("");
@@ -33,8 +40,8 @@ const Create: NextPage = () => {
 
   const { contract } = useContract(MarketplaceAddr, "marketplace");
 
-  function secondsBetweenDates(date: any) {
-    const now: any = new Date().getTime();
+  function secondsBetweenDates(date) {
+    const now = new Date().getTime();
     const selected = new Date(date).getTime();
     const diff = Math.abs(selected - now);
     const seconds = Math.floor(diff / 1000);
@@ -42,7 +49,7 @@ const Create: NextPage = () => {
     return seconds;
   }
 
-  async function handleCreateListing(e: any) {
+  async function handleCreateListing(e) {
     try {
       e.preventDefault();
       if (!signer) return;
@@ -51,13 +58,13 @@ const Create: NextPage = () => {
         console.log("direct listing called", directPrice);
         const listing = {
           // address of the NFT contract the asset you want to list is on
-          assetContractAddress: contractAddress,
+          assetContractAddress: colectionAddr,
           // token ID of the asset you want to list
           tokenId: tokenId,
           // when should the listing open up for offers
           startTimestamp: new Date(),
           // how long the listing will be open for
-          listingDurationInSeconds: 31536000,
+          listingDurationInSeconds: secondsBetweenDates(duration),
           // how many of the asset you want to list
           quantity: 1,
           // address of the currency contract that will be used to pay for the listing
@@ -68,46 +75,61 @@ const Create: NextPage = () => {
 
         console.log("listing", listing);
         if (!contract) return;
-
+        //get collection with collection address
         const q1 = query(
-          collection(db, "nfts"),
-          where("seller", "==", address),
-          where("tokenId", "==", tokenId)
+          collection(db, "collections"),
+          where("collectionAddress", "==", colectionAddr)
         );
+
         const querySnapshot = await getDocs(q1);
         let alreadyListed = false;
         querySnapshot.forEach((doc) => {
-          // doc.data() is never undefined for query doc snapshots
-          console.log(doc.id, "q111 => ", doc.data());
-          alreadyListed = true;
+          alreadyListed = doc.data().nfts.includes(tokenId) ? true : false;
         });
 
         if (alreadyListed) {
           alert("Already listed");
           return;
         }
-        let tx: any = await contract.direct.createListing.prepare(listing);
+        let tx = await contract.direct.createListing.prepare(listing);
         console.log("reached here");
         const gasLimit = await tx.estimateGasLimit(); // Estimate the gas limit
-        tx.setGasLimit(Math.floor(gasLimit.toString() * 1.2));
+        tx.setGasLimit(Math.floor(gasLimit.toString() * 1.6));
         tx = await tx.execute(); // Execute the transaction
         const receipt = tx.receipt; // the transaction receipt
         const listingId = tx.id; // the id of the newly created listing
         console.log("receiptreceipt", receipt);
         console.log("listingIdlistingId", listingId);
+
         const docRef = await addDoc(collection(db, "nfts"), {
           ...listing,
           seller: address,
-          category: category,
           listingId: listingId.toString(),
         });
-        console.log("doc ref", docRef);
+        // add token id to nfts array inside collection
+        const q = query(
+          collection(db, "collections"),
+          where("collectionAddress", "==", colectionAddr)
+        );
+        const querySnapshot1 = await getDocs(q);
+
+        querySnapshot1.forEach(async (doc) => {
+          const docRef = doc.ref;
+          const docData = doc.data();
+          const nfts = docData.nfts;
+          nfts.push(tokenId.toString());
+          await updateDoc(docRef, {
+            nfts: nfts,
+            noNft: false,
+          });
+        });
+
         router.push("/");
       } else {
         // Data of the auction you want to create
         const auction = {
           // address of the contract the asset you want to list is on
-          assetContractAddress: contractAddress,
+          assetContractAddress: colectionAddr,
           // token ID of the asset you want to list
           tokenId: tokenId,
           // when should the listing open up for offers
@@ -125,27 +147,25 @@ const Create: NextPage = () => {
         };
         console.log("auction list called", auction);
         if (!contract) return;
-
+        //get collection with collection address
         const q1 = query(
-          collection(db, "nfts"),
-          where("seller", "==", address),
-          where("tokenId", "==", tokenId)
+          collection(db, "collections"),
+          where("collectionAddress", "==", colectionAddr)
         );
+
         const querySnapshot = await getDocs(q1);
         let alreadyListed = false;
         querySnapshot.forEach((doc) => {
-          // doc.data() is never undefined for query doc snapshots
-          console.log(doc.id, "q111 => ", doc.data());
-          alreadyListed = true;
+          alreadyListed = doc.data().nfts.includes(tokenId) ? true : false;
         });
 
         if (alreadyListed) {
           alert("Already listed");
           return;
         }
-        let tx: any = await contract.auction.createListing.prepare(auction);
+        let tx = await contract.auction.createListing.prepare(auction);
         const gasLimit = await tx.estimateGasLimit(); // Estimate the gas limit
-        tx.setGasLimit(Math.floor(gasLimit.toString() * 1.2));
+        tx.setGasLimit(Math.floor(gasLimit.toString() * 1.6));
         tx = await tx.execute(); // Execute the transaction
         const receipt = tx.receipt; // the transaction receipt
         const listingId = tx.id; // the id of the newly created listing
@@ -153,18 +173,41 @@ const Create: NextPage = () => {
         console.log("listingIdlistingId", listingId);
         console.log("receiptreceipt", receipt);
         console.log("listingIdlistingId", listingId);
+
         const docRef = await addDoc(collection(db, "nfts"), {
           ...auction,
           seller: address,
-          category: category,
           listingId: listingId.toString(),
         });
+        // add token id to nfts array inside collection
+        const q = query(
+          collection(db, "collections"),
+          where("collectionAddress", "==", colectionAddr)
+        );
+        const querySnapshot1 = await getDocs(q);
+
+        querySnapshot1.forEach(async (doc) => {
+          const docRef = doc.ref;
+          const docData = doc.data();
+          const nfts = docData.nfts;
+          nfts.push(tokenId.toString());
+          await updateDoc(docRef, {
+            nfts: nfts,
+            noNft: false,
+          });
+
+          // await docRef.update({
+          //   nfts: nfts,
+          //   noNft: false,
+          // });
+        });
+
         console.log("doc ref", docRef);
         router.push("/");
       }
 
       // createDirectListing({
-      //   assetContractAddress: contractAddress,
+      //   assetContractAddress: colectionAddr,
       //   buyoutPricePerToken: buyoutPrice,
       //   currencyContractAddress: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
       //   listingDurationInSeconds: 60 * 60 * 24 * 7,
@@ -179,7 +222,7 @@ const Create: NextPage = () => {
   }
 
   // async function createAuctionListing(
-  //   contractAddress: string,
+  //   colectionAddr: string,
   //   tokenId: string,
   //   quantity: string,
   //   buyoutPrice: string,
@@ -187,7 +230,7 @@ const Create: NextPage = () => {
   // ) {
   //   try {
   //     const transaction = await marketplace?.auction.createListing({
-  //       assetContractAddress: contractAddress, // Contract Address of the NFT
+  //       assetContractAddress: colectionAddr, // Contract Address of the NFT
   //       buyoutPricePerToken: buyoutPrice, // Maximum price, the auction will end immediately if a user pays this price.
   //       currencyContractAddress: NATIVE_TOKEN_ADDRESS, // NATIVE_TOKEN_ADDRESS is the crpyto curency that is native to the network. i.e. Goerli ETH.
   //       listingDurationInSeconds: 60 * 60 * 24 * 7, // When the auction will be closed and no longer accept bids (1 Week)
@@ -204,14 +247,14 @@ const Create: NextPage = () => {
   // }
 
   // async function createDirectListing(
-  //   contractAddress: string,
+  //   colectionAddr: string,
   //   tokenId: string,
   //   price: string,
   //   quantity: string,
   // ) {
   //   try {
   //     const transaction = await marketplace?.direct.createListing({
-  //       assetContractAddress: contractAddress, // Contract Address of the NFT
+  //       assetContractAddress: colectionAddr, // Contract Address of the NFT
   //       buyoutPricePerToken: price, // Maximum price, the auction will end immediately if a user pays this price.
   //       currencyContractAddress: NATIVE_TOKEN_ADDRESS, // NATIVE_TOKEN_ADDRESS is the crpyto curency that is native to the network. i.e. Goerli ETH.
   //       listingDurationInSeconds: 60 * 60 * 24 * 7, // When the auction will be closed and no longer accept bids (1 Week)
@@ -225,7 +268,9 @@ const Create: NextPage = () => {
   //     console.error(error);
   //   }
   // }
-
+  useEffect(() => {
+    if (!colectionAddr) router.push("/");
+  }, [colectionAddr]);
   return (
     <div className="px-4 pt-[80px] lg:pt-[150px] flex justify-center mb-6">
       {/* Form Section */}
@@ -251,11 +296,10 @@ const Create: NextPage = () => {
         {/* NFT Contract Address Field */}
         <input
           type="text"
-          name="contractAddress"
+          name="colectionAddr"
           placeholder="NFT Contract Address"
           className="w-full p-4 rounded border border-[#696969] bg-transparent outline-none text-white"
-          value={contractAddress}
-          onChange={(e) => setContractAddress(e.target.value)}
+          value={colectionAddr}
         />
 
         {/* NFT Token ID Field */}
@@ -269,14 +313,14 @@ const Create: NextPage = () => {
           onChange={(e) => setTokenId(e.target.value)}
         />
 
-        <input
+        {/* <input
           type="text"
           name="quantity"
           placeholder="Quantity"
           className="w-full p-4 rounded border border-[#696969] bg-transparent outline-none text-white"
           value={quantity}
           onChange={(e) => setQuantity(e.target.value)}
-        />
+        /> */}
         {/* Sale Price For Listing Field */}
         {active === "directListing" && (
           <input
@@ -311,21 +355,19 @@ const Create: NextPage = () => {
           />
         )}
 
-        {active !== "directListing" && (
-          <input
-            required
-            type="date"
-            name="duration"
-            placeholder="Duration"
-            className="w-full p-4 rounded border border-[#696969] bg-transparent outline-none text-white"
-            value={duration}
-            onChange={(e) => setDuration(e.target.value)}
-          />
-        )}
+        <input
+          required
+          type="date"
+          name="duration"
+          placeholder="Duration"
+          className="w-full p-4 rounded border border-[#696969] bg-transparent outline-none text-white"
+          value={duration}
+          onChange={(e) => setDuration(e.target.value)}
+        />
 
         {/* make a select options input for nft categories */}
 
-        <select
+        {/* <select
           name="category"
           id="category"
           className="w-full p-4 rounded border border-[#696969] bg-transparent outline-none text-white"
@@ -338,7 +380,7 @@ const Create: NextPage = () => {
           <option value="Photography">Photography</option>
           <option value="Music">Music</option>
           <option value="Virtual Worlds">Virtual Worlds</option>
-        </select>
+        </select> */}
         <button
           onClick={(e) => handleCreateListing(e)}
           className="walletConnectButton px-[36px] py-3 rounded-xl text-white"
