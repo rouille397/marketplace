@@ -5,18 +5,15 @@ import handImageSm from "../../public/images/hero-hand-sm.png";
 import Button from "../Button";
 import twitter from "../../public/images/twitter-logo.svg";
 import wallet from "../../public/images/wallet.svg";
-import {
-  metamaskWallet,
-  useAddress,
-  useDisconnect,
-  useMetamask,
-} from "@thirdweb-dev/react";
-import { useAccount } from "wagmi";
+import { metamaskWallet, useAddress, useMetamask } from "@thirdweb-dev/react";
+import { useAccount, useDisconnect } from "wagmi";
 import Link from "next/link";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
 
 const Header = () => {
   const { address } = useAccount();
-
+  const { disconnect } = useDisconnect();
+  const { openConnectModal } = useConnectModal();
   return (
     <Fragment>
       <div className="hidden lg:flex  justify-center items-end lg:bg-[url('/images/header-bg-img.png')] bg-cover  min-[1440px]:bg-cover bg-top bg-no-repeat  w-full h-[884px] xl:h-[884px]  relative">
@@ -73,9 +70,9 @@ const Header = () => {
             </a>
             <Button
               className="uppercase font-bold text-base text-white flex gap-2 items-center px-6 py-3 rounded-xl walletConnectButton"
-              // onClick={() => {
-              //   address ? disconnect() : connect(metamask);
-              // }}
+              onClick={() => {
+                address ? disconnect() : openConnectModal && openConnectModal();
+              }}
             >
               <Image
                 src={wallet}
