@@ -1,11 +1,9 @@
-import { useSDK } from "@thirdweb-dev/react";
+import { useAddress, useSDK } from "@thirdweb-dev/react";
 import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
 import Head from "next/head";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
-import { useAccount } from "wagmi";
 import NftCard from "../../components/NftCard";
 import { db } from "../../helpers/firebase-config";
 import creatorImage from "../../public/images/creator-image.png";
@@ -16,7 +14,7 @@ const Collection = () => {
   const [collectionDataLoading, setCollectionDataLoading] = useState(false);
   const [nftsList, setNftsList] = useState([]);
   const [contract, setContract] = useState(null);
-  const { address } = useAccount();
+  const address = useAddress();
   const router = useRouter();
   const { collectionId } = router.query;
   console.log("collectionId", collectionData);

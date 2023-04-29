@@ -1,10 +1,10 @@
 import { useRouter } from "next/router";
 import React from "react";
 import { useState } from "react";
-import { useAccount } from "wagmi";
 import { db, storage } from "../../helpers/firebase-config";
 import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
 import { collection, addDoc, query, where, getDocs } from "firebase/firestore";
+import { useAddress } from "@thirdweb-dev/react";
 
 const New = () => {
   const [collectionName, setCollectionName] = useState("");
@@ -14,7 +14,7 @@ const New = () => {
   const [collectionCategory, setCollectionCategory] = useState("Art");
   const [collectionAddress, setCollectionAddress] = useState("");
   const router = useRouter();
-  const { address } = useAccount();
+  const address = useAddress();
 
   const createCollectionHandler = async () => {
     if (!address || !collectionAddress) return;

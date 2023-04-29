@@ -1,5 +1,10 @@
 import { db } from "@/helpers/firebase-config";
-import { MediaRenderer, useListing, useSDK } from "@thirdweb-dev/react";
+import {
+  MediaRenderer,
+  useAddress,
+  useListing,
+  useSDK,
+} from "@thirdweb-dev/react";
 import { utils } from "ethers";
 import {
   collection,
@@ -12,7 +17,6 @@ import type { NextPage } from "next";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import { useAccount, useSigner } from "wagmi";
 import { MarketplaceAddr } from "../../addresses";
 import styles from "../../styles/Home.module.css";
 
@@ -24,7 +28,7 @@ const ListingPage: NextPage = () => {
   const [winnerAddress, setWinnerAddress] = useState("");
   const [alreadySold, setAlreadySold] = useState(0);
   const router = useRouter();
-  const { address } = useAccount();
+  const address = useAddress();
   const sdk = useSDK();
 
   const { listingId } = router.query as { listingId: string };

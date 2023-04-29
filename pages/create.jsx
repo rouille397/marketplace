@@ -3,10 +3,7 @@ import { useRouter } from "next/router";
 import { MarketplaceAddr } from "../addresses";
 import { useState } from "react";
 import Button from "../components/Button";
-import { useAccount, useSigner } from "wagmi";
-import { ethers } from "ethers";
-import marketplaceABI from "../helpers/marketplaceAbi.json";
-import { useContract, useCreateDirectListing } from "@thirdweb-dev/react";
+import { useAddress, useContract, useSigner } from "@thirdweb-dev/react";
 
 import {
   collection,
@@ -34,8 +31,8 @@ const Create = () => {
   const [duration, setDuration] = useState("");
   const [category, setCategory] = useState("");
 
-  const { address } = useAccount();
-  const { data: signer } = useSigner();
+  const address = useAddress();
+  const signer = useSigner();
   const provider = signer?.provider;
 
   const { contract } = useContract(MarketplaceAddr, "marketplace");

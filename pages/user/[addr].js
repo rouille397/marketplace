@@ -1,10 +1,9 @@
+import { useAddress } from "@thirdweb-dev/react";
 import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
 import Head from "next/head";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
-import { useAccount } from "wagmi";
 import NftCard from "../../components/NftCard";
 import { db } from "../../helpers/firebase-config";
 import creatorImage from "../../public/images/creator-image.png";
@@ -12,7 +11,7 @@ import creatorImage from "../../public/images/creator-image.png";
 const creator = () => {
   const [collectionData, setCollectionData] = useState([]);
   const [collectionDataLoading, setCollectionDataLoading] = useState(false);
-  const { address } = useAccount();
+  const address = useAddress();
   const router = useRouter();
 
   useEffect(() => {

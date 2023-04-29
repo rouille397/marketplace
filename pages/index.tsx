@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useSDK } from "@thirdweb-dev/react";
+import { useSDK, useSigner } from "@thirdweb-dev/react";
 import Headers from "../components/Header";
 import NftCard from "../components/NftCard";
 import { MarketplaceAddr } from "../addresses";
@@ -13,7 +13,6 @@ import starIcon from "../public/images/star.svg";
 import circleIcon from "../public/images/circle.svg";
 import NftStep from "../components/NftStep";
 import { CATEGORIES, NFT_STEPS } from "../constants";
-import { useSigner } from "wagmi";
 
 import {
   query,
@@ -37,11 +36,8 @@ export default function Home() {
   const [recentlySoldLoading, setRecentlySoldLoading] = useState(false);
   const [allCollectionLoading, setAllCollectionLoading] = useState(false);
   const [allCollectionsData, setAllCollectionsData] = useState<any>([]);
-
-  const { data: signer } = useSigner();
+  const signer = useSigner();
   const provider = signer?.provider;
-
-  const router = useRouter();
 
   const sdk = useSDK();
 

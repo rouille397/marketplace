@@ -1,1 +1,1 @@
-export const MarketplaceAddr = '0x9cf6fb83bf174af69483b9feedcee7c64fc079d8';
+export const MarketplaceAddr = '0x2E4A0d0A0deD36b878Fa6BD56a5d537a682e4991';

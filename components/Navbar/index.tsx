@@ -8,15 +8,14 @@ import twitter from "../../public/images/twitter-logo.svg";
 import wallet from "../../public/images/wallet.svg";
 import hamburger from "../../public/images/hamburger.svg";
 import SlideDownMenu from "../SlideDownMenu";
-import { ConnectButton, useConnectModal } from "@rainbow-me/rainbowkit";
-import { useAccount, useDisconnect } from "wagmi";
+import { useAddress, useDisconnect, useMetamask } from "@thirdweb-dev/react";
 
 const Navbar: FC = () => {
   const [color, setColor] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const { address } = useAccount();
-  const { disconnect } = useDisconnect();
-  const { openConnectModal } = useConnectModal();
+  const address = useAddress();
+  const metamask = useMetamask();
+  const disconnect = useDisconnect();
   useEffect(() => {
     window.addEventListener("scroll", changeColor);
     return () => window.removeEventListener("scroll", changeColor);
@@ -80,7 +79,7 @@ const Navbar: FC = () => {
         <Button
           className="uppercase font-bold text-base text-white flex gap-2 items-center px-6 py-3 rounded-xl walletConnectButton"
           onClick={() => {
-            address ? disconnect() : openConnectModal && openConnectModal();
+            address ? disconnect() : metamask && metamask();
           }}
         >
           <Image
