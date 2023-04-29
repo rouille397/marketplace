@@ -5,13 +5,54 @@ import handImageSm from "../../public/images/hero-hand-sm.png";
 import Button from "../Button";
 import twitter from "../../public/images/twitter-logo.svg";
 import wallet from "../../public/images/wallet.svg";
-import { useAddress, useDisconnect, useMetamask } from "@thirdweb-dev/react";
+import {
+  useAddress,
+  useDisconnect,
+  useMetamask,
+  useNetwork,
+  useNetworkMismatch,
+} from "@thirdweb-dev/react";
 import Link from "next/link";
 
 const Header = () => {
   const address = useAddress();
   const disconnect = useDisconnect();
   const metamask = useMetamask();
+  const mismatch = useNetworkMismatch();
+  const [, switchNetwork] = useNetwork();
+
+  let connectBtn;
+  if (address && !mismatch) {
+    connectBtn = (
+      <Button
+        className="uppercase font-bold text-base text-white flex gap-2 items-center px-6 py-3 rounded-xl walletConnectButton"
+        onClick={() => disconnect()}
+      >
+        {address.slice(0, 6)}...{address.slice(-4)}
+      </Button>
+    );
+  }
+  if (address && mismatch) {
+    connectBtn = (
+      <Button
+        className="uppercase font-bold text-base text-white flex gap-2 items-center px-6 py-3 rounded-xl walletConnectButton"
+        onClick={() => switchNetwork && switchNetwork(1030)}
+      >
+        Switch Network
+      </Button>
+    );
+  }
+  if (!address) {
+    connectBtn = (
+      <Button
+        className="uppercase font-bold text-base text-white flex gap-2 items-center px-6 py-3 rounded-xl walletConnectButton"
+        onClick={() => metamask()}
+      >
+        Connect Wallet
+      </Button>
+    );
+  }
+
   return (
     <Fragment>
       <div className="hidden lg:flex  justify-center items-end lg:bg-[url('/images/header-bg-img.png')] bg-cover  min-[1440px]:bg-cover bg-top bg-no-repeat  w-full h-[884px] xl:h-[884px]  relative">
@@ -66,19 +107,7 @@ const Header = () => {
                 Twitter
               </Button>
             </a>
-            <Button
-              className="uppercase font-bold text-base text-white flex gap-2 items-center px-6 py-3 rounded-xl walletConnectButton"
-              onClick={() => {
-                address ? disconnect() : metamask && metamask();
-              }}
-            >
-              <Image
-                src={wallet}
-                alt="marketplan nitfee discord"
-                className="w-6 h-4 object-contain"
-              />
-              {address ? "Disconnect" : "Connect"}
-            </Button>
+            {connectBtn}
           </div>
           <div className="mt-4 flex justify-center">
             {address && (
