@@ -54,7 +54,7 @@ function MyApp({ Component, pageProps }: AppProps) {
 
     return (
       <ThirdwebSDKProvider
-        activeChain={5}
+        activeChain={130}
         signer={signer as any}
         queryClient={wagmiClient.queryClient as any}
       >
