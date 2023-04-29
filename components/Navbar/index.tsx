@@ -9,6 +9,7 @@ import userIcon from "../../public/images/ic_user.png";
 import wallet from "../../public/images/wallet.svg";
 import hamburger from "../../public/images/hamburger.svg";
 import SlideDownMenu from "../SlideDownMenu";
+import { useWalletConnectV1 } from "@thirdweb-dev/react";
 import {
   ChainId,
   useAddress,
@@ -21,11 +22,24 @@ import {
 const Navbar: FC = () => {
   const [color, setColor] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [metamaskInstalled, setMetamaskInstalled] = useState(false);
   const address = useAddress();
   const metamask = useMetamask();
   const disconnect = useDisconnect();
   const [, switchNetwork] = useNetwork();
   const mismatch = useNetworkMismatch();
+  const connectWithWalletConnect = useWalletConnectV1();
+
+  // check if window.ethereum is present, if yes connect otherwise connect with walletconnect
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      if (window.ethereum) {
+        setMetamaskInstalled(true);
+      }
+    }
+  }, []);
+
   useEffect(() => {
     window.addEventListener("scroll", changeColor);
     return () => window.removeEventListener("scroll", changeColor);
@@ -61,7 +75,13 @@ const Navbar: FC = () => {
     walletBtn = (
       <Button
         className="uppercase font-bold text-base text-white flex gap-2 items-center px-6 py-3 rounded-xl walletConnectButton"
-        onClick={() => metamask && metamask()}
+        onClick={() => {
+          if (metamaskInstalled) {
+            metamask();
+          } else {
+            connectWithWalletConnect();
+          }
+        }}
       >
         Connect
       </Button>

@@ -1,5 +1,5 @@
 import Image from "next/image";
-import React, { Fragment } from "react";
+import React, { Fragment, useEffect } from "react";
 import handImage from "../../public/images/hand-image.png";
 import handImageSm from "../../public/images/hero-hand-sm.png";
 import Button from "../Button";
@@ -11,6 +11,7 @@ import {
   useMetamask,
   useNetwork,
   useNetworkMismatch,
+  useWalletConnectV1,
 } from "@thirdweb-dev/react";
 import Link from "next/link";
 
@@ -20,9 +21,34 @@ const Header = () => {
   const metamask = useMetamask();
   const mismatch = useNetworkMismatch();
   const [, switchNetwork] = useNetwork();
+  const connectWithWalletConnect = useWalletConnectV1();
+  const [metamaskInstalled, setMetamaskInstalled] = React.useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      if (window.ethereum) {
+        setMetamaskInstalled(true);
+      }
+    }
+  }, []);
 
   let connectBtn;
-  if (address && !mismatch) {
+  if (!address) {
+    connectBtn = (
+      <Button
+        className="uppercase font-bold text-base text-white flex gap-2 items-center px-6 py-3 rounded-xl walletConnectButton"
+        onClick={() => {
+          if (metamaskInstalled) {
+            metamask();
+          } else {
+            connectWithWalletConnect();
+          }
+        }}
+      >
+        Connect Wallet
+      </Button>
+    );
+  } else if (address && !mismatch) {
     connectBtn = (
       <Button
         className="uppercase font-bold text-base text-white flex gap-2 items-center px-6 py-3 rounded-xl walletConnectButton"
@@ -31,24 +57,13 @@ const Header = () => {
         {address.slice(0, 6)}...{address.slice(-4)}
       </Button>
     );
-  }
-  if (address && mismatch) {
+  } else if (address && mismatch) {
     connectBtn = (
       <Button
         className="uppercase font-bold text-base text-white flex gap-2 items-center px-6 py-3 rounded-xl walletConnectButton"
         onClick={() => switchNetwork && switchNetwork(1030)}
       >
         Switch Network
-      </Button>
-    );
-  }
-  if (!address) {
-    connectBtn = (
-      <Button
-        className="uppercase font-bold text-base text-white flex gap-2 items-center px-6 py-3 rounded-xl walletConnectButton"
-        onClick={() => metamask()}
-      >
-        Connect Wallet
       </Button>
     );
   }
