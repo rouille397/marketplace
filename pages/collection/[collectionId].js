@@ -49,15 +49,22 @@ const Collection = () => {
   }, [address, contract]);
 
   useEffect(() => {
-    if (!contract || !collectionData[0]) return;
     (async () => {
-      const listings = await contract.getActiveListings({
-        tokenContract: collectionData[0]?.collectionAddress, // Only return listings that are selling tokens from this contract
-      });
-      console.log("listings", listings);
-      setNftsList(listings);
+      // fetch nfts of this collection from firebase
+      const nftsRef = collection(db, "nfts");
+      const q = query(
+        nftsRef,
+        where("assetContractAddress", "==", collectionId),
+        orderBy("listingId", "desc")
+      );
+      const nftsSnapshot = await getDocs(q);
+      const nftsData = nftsSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setNftsList(nftsData);
     })();
-  }, [contract, collectionData[0]]);
+  }, [collectionId]);
 
   // get collection data from firbase using address
 
@@ -100,21 +107,18 @@ const Collection = () => {
               className="cursor-pointer"
               onClick={() =>
                 router.push({
-                  pathname: `/listing/${item.id}`,
+                  pathname: `/listing/${item.listingId}`,
                 })
               }
             >
               <NftCard
                 key={item.id}
-                name={item.asset.name}
-                price={item.buyoutCurrencyValuePerToken?.displayValue}
+                name={item.name}
+                price={item.buyoutPricePerToken}
                 symbol={"CFX"}
-                user={
-                  item.sellerAddress.slice(0, 5) +
-                  "..." +
-                  item.sellerAddress.slice(-4)
-                }
-                image={item.asset.image}
+                user={item.seller.slice(0, 5) + "..." + item.seller.slice(-4)}
+                image={item.image}
+                sold={item.soldAt > 0 ? true : false}
               />
             </div>
           ))}

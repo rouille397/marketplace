@@ -12,6 +12,7 @@ import {
   query,
   updateDoc,
   where,
+  deleteDoc,
 } from "firebase/firestore";
 import type { NextPage } from "next";
 import Image from "next/image";
@@ -90,6 +91,8 @@ const ListingPage: NextPage = () => {
   };
 
   async function buyNft() {
+    if (!listing) return;
+
     try {
       let tx: any = await contract?.buyoutListing.prepare(listingId, 1);
       const gasLimit = await tx.estimateGasLimit(); // Estimate the gas limit
@@ -101,11 +104,31 @@ const ListingPage: NextPage = () => {
         collection(db, "nfts"),
         where("listingId", "==", listingId)
       );
+
       const querySnapshot = await getDocs(q);
       querySnapshot.forEach(async (doc) => {
         await updateDoc(doc.ref, {
           soldAt: new Date().getTime(),
           buyer: address,
+        });
+      });
+
+      // remove nft from array nfts containing nft token ids in collection "collections"
+
+      const q2 = query(
+        collection(db, "collections"),
+        where("nfts", "array-contains", listing.asset.id)
+      );
+      const querySnapshot2 = await getDocs(q2);
+      querySnapshot2.forEach(async (doc) => {
+        const data = doc.data();
+        const nfts = data.nfts;
+        const index = nfts.indexOf(listing.asset.id);
+        if (index > -1) {
+          nfts.splice(index, 1);
+        }
+        await updateDoc(doc.ref, {
+          nfts: nfts,
         });
       });
 
@@ -127,6 +150,37 @@ const ListingPage: NextPage = () => {
         tx = await tx.execute(); // Execute the transaction
 
         console.log(tx, "txResult");
+
+        // delete data from firebase
+        const q = query(
+          collection(db, "nfts"),
+          where("listingId", "==", listingId)
+        );
+        // get doc id
+
+        const querySnapshot = await getDocs(q);
+        querySnapshot.forEach(async (doc) => {
+          await deleteDoc(doc.ref);
+        });
+
+        // delete it from array nfts containing nft token ids in collection "collections"
+
+        const q2 = query(
+          collection(db, "collections"),
+          where("nfts", "array-contains", listing.asset.id)
+        );
+        const querySnapshot2 = await getDocs(q2);
+        querySnapshot2.forEach(async (doc) => {
+          const data = doc.data();
+          const nfts = data.nfts;
+          const index = nfts.indexOf(listing.asset.id);
+          if (index > -1) {
+            nfts.splice(index, 1);
+          }
+          await updateDoc(doc.ref, {
+            nfts: nfts,
+          });
+        });
         alert("Listing cancelled successfully!");
         router.push("/");
       } else {
@@ -236,6 +290,17 @@ const ListingPage: NextPage = () => {
     try {
       await contract.auction.closeListing(listingId, winnerAddress);
       console.log("NFT sold successfuly");
+      // add soldAt to firebase
+      const q = query(
+        collection(db, "nfts"),
+        where("listingId", "==", listingId)
+      );
+      const querySnapshot = await getDocs(q);
+      querySnapshot.forEach(async (doc) => {
+        await updateDoc(doc.ref, {
+          soldAt: new Date().getTime(),
+        });
+      });
       router.push("/");
     } catch (e) {
       console.log(e);
@@ -565,31 +630,8 @@ const ListingPage: NextPage = () => {
                 </p>
               )}
           </div>
-          {/* Starting the Cancel operation from here */}
-          {/* <div>
-              <Web3Button
-                contractAddress={marketplaceContractAddress}
-                action={() =>
-                  cancelListing({
-                    id: listingId,
-                    type: ListingType.Direct, // Direct (0) or Auction (1)
-                  })
-                }
-              >
-                Cancel Listing
-              </Web3Button>
-            </div> */}
-          {/* Ending the cancle operation here */}
         </div>
       </div>
-      {/* {listing.type == 0 && (
-        <div className="max-w-[90vw] w-full mt-36">
-          <h2 className="font-bold leading-[68px] text-[56px] tracking-wide text-center mb-12">
-            Offers
-          </h2>
-          <Table assetDetails={listing} />
-        </div>
-      )} */}
     </div>
   );
 };

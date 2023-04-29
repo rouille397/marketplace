@@ -10,6 +10,7 @@ interface INftCardProps {
   image: string;
   type: string | null | undefined;
   onClick: () => void;
+  sold?: boolean;
 }
 
 const NftCard: FC<INftCardProps> = ({
@@ -20,6 +21,7 @@ const NftCard: FC<INftCardProps> = ({
   user,
   onClick,
   type,
+  sold,
 }) => {
   return (
     <div
@@ -42,9 +44,15 @@ const NftCard: FC<INftCardProps> = ({
         </div>
         <p className="text-xs font-normal text-white">{user}</p>
       </div>
-      <Button className="hidden text-[19px] font-medium text-white rounded-xl w-full py-4  collect-button">
-        {type ? "List NFTs" : "Collect Now"}
-      </Button>
+      {sold ? (
+        <Button className="hidden text-[19px] font-medium text-white rounded-xl w-full py-4  collect-button">
+          Sold Out
+        </Button>
+      ) : (
+        <Button className="hidden text-[19px] font-medium text-white rounded-xl w-full py-4  collect-button">
+          {type ? "List NFTs" : "Collect Now"}
+        </Button>
+      )}
     </div>
   );
 };

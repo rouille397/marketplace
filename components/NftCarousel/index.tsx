@@ -13,7 +13,6 @@ interface INftCarouselProps {
         symbol: string;
         user: string;
         image: string | null | undefined;
-        soldOut: boolean;
       }[]
     | any;
 }
@@ -29,14 +28,14 @@ const NftCarousel: FC<INftCarouselProps> = ({ listing }) => {
       {listing?.map((item: any) => (
         <Card
           key={item.name}
-          name={item.asset.name}
-          price={item.buyoutCurrencyValuePerToken.displayValue}
-          symbol={item.buyoutCurrencyValuePerToken.symbol}
+          name={item.name}
+          price={item.buyoutPricePerToken}
+          symbol={"CFX"}
           user={"@user"}
-          image={item.asset.image}
-          listerId={item.sellerAddress}
-          onClick={() => push(`/listing/${item.id}`)}
-          soldOut={item.sold || false}
+          image={item.image}
+          listerId={item.seller}
+          onClick={() => push(`/listing/${item.listingId}`)}
+          soldOut={item.soldAt || false}
         />
       ))}
     </Slider>

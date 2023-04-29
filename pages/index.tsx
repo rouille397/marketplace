@@ -1,10 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useSDK, useSigner } from "@thirdweb-dev/react";
 import Headers from "../components/Header";
-import NftCard from "../components/NftCard";
-import { MarketplaceAddr } from "../addresses";
 import Button from "../components/Button";
-import { useRouter } from "next/router";
 import Head from "next/head";
 import NftCarousel from "../components/NftCarousel";
 import Loading from "../components/Loading";
@@ -28,72 +24,29 @@ import Link from "next/link";
 export default function Home() {
   const [recentlyAdded, setRecentlyAdded] = useState<any>([]);
   const [recentlySold, setRecentlySold] = useState<any>([]);
-  const [contract, setContract] = useState<any>(null);
-  const [currentBlockNum, setCurrentBlockNum] = useState<any>(null);
   const [selectedType, setSelectedType] = useState<any>(null);
-
   const [recentlyAddedLoading, setRecentlyAddedLoading] = useState(false);
   const [recentlySoldLoading, setRecentlySoldLoading] = useState(false);
   const [allCollectionLoading, setAllCollectionLoading] = useState(false);
   const [allCollectionsData, setAllCollectionsData] = useState<any>([]);
-  const signer = useSigner();
-  const provider = signer?.provider;
-
-  const sdk = useSDK();
-
-  useEffect(() => {
-    if (!sdk) return;
-
-    (async () => {
-      try {
-        const contract = await sdk.getContract(
-          MarketplaceAddr,
-          "marketplace" // Provide the "marketplace" contract type
-        );
-
-        const currentBlock = await provider?.getBlockNumber();
-        setCurrentBlockNum(currentBlock);
-        setContract(contract);
-      } catch (e) {
-        console.log("error", e);
-      }
-    })();
-  }, [sdk]);
 
   //recently listed
   useEffect(() => {
     (async () => {
-      if (!contract || recentlyAdded.length > 0 || !currentBlockNum) return;
       setRecentlyAddedLoading(true);
       const nftsRef = collection(db, "nfts");
       const q = query(nftsRef, orderBy("listingId", "desc"), limit(20));
       const querySnapshot = await getDocs(q);
       const nfts = querySnapshot.docs.map((doc) => doc.data());
-      console.log("nfts", nfts);
-      // get nft ids
-      const nftIds = nfts.map((nft) => nft.listingId);
-      console.log("nftIds", nftIds);
-      // get nft data
-      const nftDataPromises: any = [];
-      nftIds.forEach((id: any) => {
-        nftDataPromises.push(contract?.getListing(id));
-      });
-      let results = await Promise.all(
-        nftDataPromises.map((p: any) => p.catch((e: any) => e))
-      );
-      const validResults = results.filter(
-        (result: any) => !(result instanceof Error)
-      );
-      console.log("validResults", validResults);
-      setRecentlyAdded(validResults);
+      console.log("nftsss", nfts);
+      setRecentlyAdded(nfts);
       setRecentlyAddedLoading(false);
     })();
-  }, [contract]);
+  }, []);
 
   // //this useEffect will find recently sold NFTS
   useEffect(() => {
     (async () => {
-      if (!contract || recentlySold.length > 0 || !currentBlockNum) return;
       setRecentlySoldLoading(true);
       // get nfts from nfts collection in firebase where soldAt exists, get them in descending order
       const nftsRef = collection(db, "nfts");
@@ -106,27 +59,10 @@ export default function Home() {
       const querySnapshot = await getDocs(q);
       const nfts = querySnapshot.docs.map((doc) => doc.data());
       console.log("nftssoldout", nfts);
-      // get nft ids
-      const nftIds = nfts.map((nft) => nft.listingId);
-      console.log("nftIds", nftIds);
-      // get nft data
-      const nftDataPromises: any = [];
-      nftIds.forEach((id: any) => {
-        nftDataPromises.push(contract?.getListing(id));
-      });
-      let results = await Promise.all(
-        nftDataPromises.map((p: any) => p.catch((e: any) => e))
-      );
-      const validResults = results.filter(
-        (result: any) => !(result instanceof Error)
-      );
-      console.log("validResults", validResults);
-      setRecentlySold(validResults);
+      setRecentlySold(nfts);
       setRecentlySoldLoading(false);
     })();
-  }, [contract]);
-
-  console.log("recentlyAdded", recentlyAdded);
+  }, []);
 
   useEffect(() => {
     //only get collections in which collection.nfts.length > 0
@@ -145,7 +81,6 @@ export default function Home() {
           id: doc.id,
           ...doc.data(),
         }));
-        console.log("collectionList", collectionList);
         setAllCollectionsData(collectionList);
         setAllCollectionLoading(false);
       }
@@ -167,11 +102,9 @@ export default function Home() {
         }));
         setAllCollectionsData(collectionList);
         setAllCollectionLoading(false);
-        console.log("collectionList", collectionList);
       }
     })();
   }, [selectedType]);
-  console.log("allCollectionsData", allCollectionsData);
   return (
     <>
       <Head>
@@ -436,12 +369,7 @@ export default function Home() {
             <Loading isLoading={recentlySoldLoading} />
           ) : (
             <div className="max-h-[500px] overflow-hidden">
-              <NftCarousel
-                listing={recentlySold.map((l: any) => ({
-                  ...l,
-                  sold: true,
-                }))}
-              />
+              <NftCarousel listing={recentlySold} />
             </div>
           )}
         </div>

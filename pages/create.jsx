@@ -88,6 +88,7 @@ const Create = () => {
           alert("Already listed");
           return;
         }
+
         let tx = await contract.direct.createListing.prepare(listing);
         console.log("reached here");
         const gasLimit = await tx.estimateGasLimit(); // Estimate the gas limit
@@ -98,12 +99,23 @@ const Create = () => {
         console.log("receiptreceipt", receipt);
         console.log("listingIdlistingId", listingId);
 
+        // fetch the listing from the blockchain
+        let listingData = await contract.direct.getListing(listingId);
+
+        console.log("listingDataaa", listingData);
+
+        // add listing to firebase
+
         const docRef = await addDoc(collection(db, "nfts"), {
           ...listing,
+          name: listingData.asset.name,
+          image: listingData.asset.image,
           seller: address,
           listingId: listingId.toString(),
+          type: "direct",
         });
         // add token id to nfts array inside collection
+
         const q = query(
           collection(db, "collections"),
           where("collectionAddress", "==", colectionAddr)
@@ -120,7 +132,6 @@ const Create = () => {
             noNft: false,
           });
         });
-
         router.push("/");
       } else {
         // Data of the auction you want to create
@@ -171,12 +182,22 @@ const Create = () => {
         console.log("receiptreceipt", receipt);
         console.log("listingIdlistingId", listingId);
 
+        // fetch the listing from the blockchain
+        const listingData = await contract.auction.getListing(listingId);
+        console.log("listingData", listingData);
+
+        // add listing to firebase
+
         const docRef = await addDoc(collection(db, "nfts"), {
           ...auction,
+          name: listingData.asset.name,
+          image: listingData.asset.image,
           seller: address,
           listingId: listingId.toString(),
+          type: "auction",
         });
         // add token id to nfts array inside collection
+
         const q = query(
           collection(db, "collections"),
           where("collectionAddress", "==", colectionAddr)
@@ -192,79 +213,16 @@ const Create = () => {
             nfts: nfts,
             noNft: false,
           });
-
-          // await docRef.update({
-          //   nfts: nfts,
-          //   noNft: false,
-          // });
         });
 
         console.log("doc ref", docRef);
         router.push("/");
       }
-
-      // createDirectListing({
-      //   assetContractAddress: colectionAddr,
-      //   buyoutPricePerToken: buyoutPrice,
-      //   currencyContractAddress: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
-      //   listingDurationInSeconds: 60 * 60 * 24 * 7,
-      //   quantity: quantity,
-      //   startTimestamp: new Date(),
-      //   tokenId: +tokenId,
-      //   type: "NewDirectListing",
-      // });
     } catch (error) {
       console.error("error", error);
     }
   }
 
-  // async function createAuctionListing(
-  //   colectionAddr: string,
-  //   tokenId: string,
-  //   quantity: string,
-  //   buyoutPrice: string,
-  //   reservePrice: string,
-  // ) {
-  //   try {
-  //     const transaction = await marketplace?.auction.createListing({
-  //       assetContractAddress: colectionAddr, // Contract Address of the NFT
-  //       buyoutPricePerToken: buyoutPrice, // Maximum price, the auction will end immediately if a user pays this price.
-  //       currencyContractAddress: NATIVE_TOKEN_ADDRESS, // NATIVE_TOKEN_ADDRESS is the crpyto curency that is native to the network. i.e. Goerli ETH.
-  //       listingDurationInSeconds: 60 * 60 * 24 * 7, // When the auction will be closed and no longer accept bids (1 Week)
-  //       quantity: quantity, // How many of the NFTs are being listed (useful for ERC 1155 tokens)
-  //       reservePricePerToken: reservePrice, // Minimum price, users cannot bid below this amount
-  //       startTimestamp: new Date(), // When the listing will start
-  //       tokenId: +tokenId, // Token ID of the NFT.
-  //     });
-
-  //     return transaction;
-  //   } catch (error) {
-  //     console.error(error);
-  //   }
-  // }
-
-  // async function createDirectListing(
-  //   colectionAddr: string,
-  //   tokenId: string,
-  //   price: string,
-  //   quantity: string,
-  // ) {
-  //   try {
-  //     const transaction = await marketplace?.direct.createListing({
-  //       assetContractAddress: colectionAddr, // Contract Address of the NFT
-  //       buyoutPricePerToken: price, // Maximum price, the auction will end immediately if a user pays this price.
-  //       currencyContractAddress: NATIVE_TOKEN_ADDRESS, // NATIVE_TOKEN_ADDRESS is the crpyto curency that is native to the network. i.e. Goerli ETH.
-  //       listingDurationInSeconds: 60 * 60 * 24 * 7, // When the auction will be closed and no longer accept bids (1 Week)
-  //       quantity: quantity, // How many of the NFTs are being listed (useful for ERC 1155 tokens)
-  //       startTimestamp: new Date(0), // When the listing will start
-  //       tokenId: +tokenId, // Token ID of the NFT.
-  //     });
-
-  //     return transaction;
-  //   } catch (error) {
-  //     console.error(error);
-  //   }
-  // }
   useEffect(() => {
     if (!colectionAddr) router.push("/");
   }, [colectionAddr]);
@@ -362,22 +320,6 @@ const Create = () => {
           onChange={(e) => setDuration(e.target.value)}
         />
 
-        {/* make a select options input for nft categories */}
-
-        {/* <select
-          name="category"
-          id="category"
-          className="w-full p-4 rounded border border-[#696969] bg-transparent outline-none text-white"
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-        >
-          <option value="Art">Art</option>
-          <option value="Gaming">Gaming</option>
-          <option value="Sports">Sports</option>
-          <option value="Photography">Photography</option>
-          <option value="Music">Music</option>
-          <option value="Virtual Worlds">Virtual Worlds</option>
-        </select> */}
         <button
           onClick={(e) => handleCreateListing(e)}
           className="walletConnectButton px-[36px] py-3 rounded-xl text-white"

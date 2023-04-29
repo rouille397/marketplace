@@ -5,10 +5,18 @@ import { NAVBAR } from "../../constants";
 import Button from "../Button";
 import logo from "../../public/images/logo.png";
 import twitter from "../../public/images/twitter-logo.svg";
+import userIcon from "../../public/images/ic_user.png";
 import wallet from "../../public/images/wallet.svg";
 import hamburger from "../../public/images/hamburger.svg";
 import SlideDownMenu from "../SlideDownMenu";
-import { useAddress, useDisconnect, useMetamask } from "@thirdweb-dev/react";
+import {
+  ChainId,
+  useAddress,
+  useDisconnect,
+  useMetamask,
+  useNetwork,
+  useNetworkMismatch,
+} from "@thirdweb-dev/react";
 
 const Navbar: FC = () => {
   const [color, setColor] = useState(false);
@@ -16,6 +24,8 @@ const Navbar: FC = () => {
   const address = useAddress();
   const metamask = useMetamask();
   const disconnect = useDisconnect();
+  const [, switchNetwork] = useNetwork();
+  const mismatch = useNetworkMismatch();
   useEffect(() => {
     window.addEventListener("scroll", changeColor);
     return () => window.removeEventListener("scroll", changeColor);
@@ -25,6 +35,38 @@ const Navbar: FC = () => {
     if (window.scrollY >= 60) setColor(true);
     else setColor(false);
   };
+  console.log("correctNetwork", mismatch);
+  let walletBtn;
+  if (address && !mismatch) {
+    walletBtn = (
+      <Button
+        className="uppercase font-bold text-base text-white flex gap-2 items-center px-6 py-3 rounded-xl walletConnectButton"
+        onClick={() => disconnect()}
+      >
+        {address.slice(0, 6)}...{address.slice(-4)}
+      </Button>
+    );
+  }
+  if (address && mismatch) {
+    walletBtn = (
+      <Button
+        className="uppercase font-bold text-base text-white flex gap-2 items-center px-6 py-3 rounded-xl walletConnectButton"
+        onClick={() => switchNetwork && switchNetwork(1030)}
+      >
+        Switch Network
+      </Button>
+    );
+  }
+  if (!address) {
+    walletBtn = (
+      <Button
+        className="uppercase font-bold text-base text-white flex gap-2 items-center px-6 py-3 rounded-xl walletConnectButton"
+        onClick={() => metamask && metamask()}
+      >
+        Connect
+      </Button>
+    );
+  }
 
   return (
     <div
@@ -71,24 +113,20 @@ const Navbar: FC = () => {
         </a>
         {address && (
           <Link href={`/user/${address}`}>
-            <p className="font-medium text-white px-6 py-3 rounded-xl border border-[#141B22] min-w-[154px]">
-              {address?.slice(0, 6).concat("...").concat(address?.slice(-4))}
-            </p>
+            <Button
+              className="uppercase text-base text-white flex gap-2 items-center"
+              type="transparent"
+            >
+              <Image
+                src={userIcon}
+                alt="marketplan nitfee discord"
+                className="w-6 h-6 object-contain"
+              />
+              Profile
+            </Button>
           </Link>
         )}
-        <Button
-          className="uppercase font-bold text-base text-white flex gap-2 items-center px-6 py-3 rounded-xl walletConnectButton"
-          onClick={() => {
-            address ? disconnect() : metamask && metamask();
-          }}
-        >
-          <Image
-            src={wallet}
-            alt="marketplan nitfee discord"
-            className="w-6 h-4 object-contain"
-          />
-          {address ? "Disconnect" : "Connect"}
-        </Button>
+        {walletBtn}
       </div>
       {/* // Mobie screeen */}
       <div className="lg:hidden">
