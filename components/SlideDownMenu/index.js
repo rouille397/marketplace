@@ -6,10 +6,22 @@ import { useRouter } from "next/router";
 import logo from "../../public/images/logo.png";
 import Footer from "../Footer";
 import { useAddress } from "@thirdweb-dev/react";
+import { ADMIN } from "@/addresses";
 
 const SlideDownMenu = ({ menu, callback }) => {
   const { route } = useRouter();
   const address = useAddress();
+  let linksToShow = [];
+  menu.forEach((e) => {
+    if (
+      address.toLowerCase() !== ADMIN.toLowerCase() &&
+      e.name !== "Post Collection"
+    ) {
+      linksToShow.push(e);
+    } else if (address.toLowerCase() == ADMIN.toLowerCase()) {
+      linksToShow.push(e);
+    }
+  });
   return (
     <div className={`${styles.menu} bg-night`}>
       <div className={styles.crossIcon}>
@@ -24,7 +36,7 @@ const SlideDownMenu = ({ menu, callback }) => {
         </span>
       </div>
       <div className="flex-1 flex flex-col">
-        {menu?.map((item) => (
+        {linksToShow?.map((item) => (
           <Link
             key={item.link}
             href={item.link}

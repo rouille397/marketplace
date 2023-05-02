@@ -241,6 +241,7 @@ const Create = () => {
 
   useEffect(() => {
     if (!colectionAddr || !address) return;
+    setStartLoading(true);
     axios
       .get(
         `https://evmapi.confluxscan.net/nft/tokens?contract=${colectionAddr}&owner=${address}&sort=DESC&sortField=latest_update_time&cursor=0&skip=0&limit=100&withBrief=false&withMetadata=false`
@@ -255,10 +256,14 @@ const Create = () => {
         );
         console.log("listlist", list);
         setAvailableTokens(list);
+        setTokenId(list[0].tokenId);
+        setStartLoading(false);
       })
       .catch((err) => {
         console.log("errerr", err);
+        setStartLoading(false);
       });
+    setStartLoading(false);
   }, [colectionAddr, address]);
 
   console.log("tokenId", tokenId);

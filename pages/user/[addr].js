@@ -45,7 +45,7 @@ const creator = () => {
         let collectionAddressAndName = {};
         for (let i = 0; i < collectionList.length; i++) {
           collectionAddressAndName[
-            collectionList[i].collectionAddresswerCase()
+            collectionList[i].collectionAddress?.toLowerCase()
           ] = collectionList[i].name;
         }
 
@@ -53,8 +53,8 @@ const creator = () => {
         const res = await axios.get(
           `https://evmapi.confluxscan.net/nft/balances?owner=${address}`
         );
-        console.log("res", res.data.result.list);
-        let userCollections = res.data.result.list;
+        console.log("before list");
+        let userCollections = res.data.result?.list;
         let relevantCollections = [];
         // see if collection.contract is in collectionAddress
 
@@ -75,8 +75,8 @@ const creator = () => {
           const res = await axios.get(
             `https://evmapi.confluxscan.net/nft/tokens?contract=${relevantCollections[i].contract}&owner=${address}&sort=DESC&sortField=latest_update_time&cursor=0&skip=0&limit=10&withBrief=false&withMetadata=false`
           );
-          console.log("res", res.data.result.list);
-          nfts = [...nfts, ...res.data.result.list];
+          console.log("before list 2");
+          nfts = [...nfts, ...res.data.result?.list];
         }
 
         console.log("nfts", nfts);

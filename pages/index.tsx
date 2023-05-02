@@ -20,6 +20,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/helpers/firebase-config";
 import Link from "next/link";
+import Contact from "@/components/Contact";
 
 export default function Home() {
   const [recentlyAdded, setRecentlyAdded] = useState<any>([]);
@@ -172,162 +173,192 @@ export default function Home() {
           {allCollectionLoading ? (
             <Loading isLoading={allCollectionLoading} />
           ) : (
-            <div className="flex flex-col md:gap-6 gap-3 md:mt-20 items-center justify-center">
-              <div className="flex w-full md:gap-6 gap-3 md:flex-row flex-col">
-                {allCollectionsData[0] && (
-                  // show listing count when we hover over parent
+            // <div className="flex flex-col md:gap-6 gap-3 md:mt-20 items-center justify-center">
+            //   <div className="flex w-full md:gap-6 gap-3 md:flex-row flex-col">
+            //     {allCollectionsData[0] && (
+            //       // show listing count when we hover over parent
+            //       <Link
+            //         href={`/collection/${allCollectionsData[0]?.collectionAddress?.toLowerCase()}`}
+            //       >
+            //         <div className="md:flex-1 md:h-72 h-40 rounded-lg relative group ">
+            //           <img
+            //             src={allCollectionsData[0]?.image}
+            //             className="w-full h-full object-cover"
+            //             alt="marketplan"
+            //           />
+            //           {/* show listing count which is collection.nfts.length when hover over parent */}
+            //           <div className="absolute bottom-0 left-0 w-full h-full bg-gradient-to-t from-black to-transparent hidden justify-center items-center group-hover:flex cursor-pointer">
+            //             <div className="text-center">
+            //               <p className="font-semibold md:text-2xl text-base ">
+            //                 {allCollectionsData[0]?.name}
+            //               </p>
+            //               <p className="text-white md:text-[18px] text-sm font-semibold">
+            //                 {allCollectionsData[0]?.nfts?.length} Listings
+            //               </p>
+            //             </div>
+            //           </div>
+            //         </div>
+            //       </Link>
+            //     )}
+            //     {allCollectionsData[0] && (
+            //       <Link
+            //         href={`/collection/${allCollectionsData[1]?.collectionAddress?.toLowerCase()}`}
+            //       >
+            //         <div className="md:flex-1 md:h-72 h-40 rounded-lg relative group ">
+            //           {allCollectionsData[1]?.image && (
+            //             <>
+            //               <img
+            //                 src={allCollectionsData[1]?.image}
+            //                 className="w-full h-full object-cover"
+            //                 alt="marketplan"
+            //               />
+            //               {/* show listing count which is collection.nfts.length when hover over parent */}
+            //               <div className="absolute bottom-0 left-0 w-full h-full bg-gradient-to-t from-black to-transparent hidden justify-center items-center group-hover:flex cursor-pointer">
+            //                 <div className="text-center">
+            //                   <p className="font-semibold md:text-2xl text-base ">
+            //                     {allCollectionsData[1]?.name}
+            //                   </p>
+            //                   <p className="text-white md:text-[18px] text-sm font-semibold">
+            //                     {allCollectionsData[1]?.nfts?.length} Listings
+            //                   </p>
+            //                 </div>
+            //               </div>
+            //             </>
+            //           )}
+            //         </div>
+            //       </Link>
+            //     )}
+            //   </div>
+            //   {allCollectionsData[2] && (
+            //     <div className="justify-center grid md:grid-cols-3 grid-cols-2 md:grid-rows-1 grid-rows-2 w-full md:h-72 md:gap-6 gap-3 h-72 ">
+            //       {allCollectionsData[2] && (
+            //         <Link
+            //           href={`/collection/${allCollectionsData[2]?.collectionAddress?.toLowerCase()}`}
+            //         >
+            //           <div className="rounded-lg w-full h-full group cursor-pointer relative">
+            //             <img
+            //               src={allCollectionsData[2]?.image}
+            //               className="w-full h-full object-cover"
+            //               alt="marketplan"
+            //             />
+
+            //             {/* show listing count which is collection.nfts.length when hover over parent */}
+            //             <div className="absolute bottom-0 left-0 w-full h-full bg-gradient-to-t from-black to-transparent hidden justify-center items-center group-hover:flex cursor-pointer">
+            //               <div className="text-center">
+            //                 <p className="font-semibold md:text-2xl text-base ">
+            //                   {allCollectionsData[2]?.name}
+            //                 </p>
+            //                 <p className="text-white md:text-[18px] text-sm font-semibold">
+            //                   {allCollectionsData[2]?.nfts?.length} Listings
+            //                 </p>
+            //               </div>
+            //             </div>
+            //           </div>
+            //         </Link>
+            //       )}
+            //       {allCollectionsData[3] && (
+            //         <Link
+            //           href={`/collection/${allCollectionsData[3]?.collectionAddress?.toLowerCase()}`}
+            //         >
+            //           <div className="rounded-lg w-full h-full group cursor-pointer relative">
+            //             <img
+            //               src={allCollectionsData[3]?.image}
+            //               className="w-full h-full object-cover"
+            //               alt="marketplan"
+            //             />
+            //             <div className="absolute bottom-0 left-0 w-full h-full bg-gradient-to-t from-black to-transparent hidden justify-center items-center group-hover:flex cursor-pointer">
+            //               <div className="text-center">
+            //                 <p className="font-semibold md:text-2xl text-base ">
+            //                   {allCollectionsData[3]?.name}
+            //                 </p>
+            //                 <p className="text-white md:text-[18px] text-sm font-semibold">
+            //                   {allCollectionsData[3]?.nfts.length} Listings
+            //                 </p>
+            //               </div>
+            //             </div>
+            //           </div>
+            //         </Link>
+            //       )}
+            //       {allCollectionsData[4] && (
+            //         <Link
+            //           href={`/collection/${allCollectionsData[4]?.collectionAddress?.toLowerCase()}`}
+            //         >
+            //           <div className="rounded-lg w-full h-full group cursor-pointer relative">
+            //             <img
+            //               src={allCollectionsData[4]?.image}
+            //               className="w-full h-full object-cover"
+            //               alt="marketplan"
+            //             />
+            //             <div className="absolute bottom-0 left-0 w-full h-full bg-gradient-to-t from-black to-transparent hidden justify-center items-center group-hover:flex cursor-pointer">
+            //               <div className="text-center">
+            //                 <p className="font-semibold md:text-2xl text-base ">
+            //                   {allCollectionsData[4]?.name}
+            //                 </p>
+            //                 <p className="text-white md:text-[18px] text-sm font-semibold">
+            //                   {allCollectionsData[4]?.nfts?.length} Listings
+            //                 </p>
+            //               </div>
+            //             </div>
+            //           </div>
+            //         </Link>
+            //       )}
+            //       {allCollectionsData[5] && (
+            //         <Link
+            //           href={`/collection/${allCollectionsData[5]?.collectionAddress?.toLowerCase()}`}
+            //         >
+            //           <div className="bg-stone-200 rounded-lg md:hidden  w-full h-full group">
+            //             <img
+            //               src={allCollectionsData[5]?.image}
+            //               className="w-full h-full object-cover"
+            //               alt="marketplan"
+            //             />
+            //             <div className="absolute bottom-0 left-0 w-full h-full bg-gradient-to-t from-black to-transparent hidden justify-center items-center group-hover:flex cursor-pointer">
+            //               <div className="text-center">
+            //                 <p className="font-semibold md:text-2xl text-base ">
+            //                   {allCollectionsData[5]?.name}
+            //                 </p>
+            //                 <p className="text-white md:text-[18px] text-sm font-semibold">
+            //                   {allCollectionsData[5]?.nfts?.length} Listings
+            //                 </p>
+            //               </div>
+            //             </div>
+            //           </div>
+            //         </Link>
+            //       )}
+            //     </div>
+            //   )}
+            // </div>
+
+            // show first 8 collections in grid view, large screen has 4 columns and small screen has 2 columns
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:h-[450px]">
+              {allCollectionsData?.map((collection: any, index: any) => {
+                return (
                   <Link
-                    href={`/collection/${allCollectionsData[0]?.collectionAddress?.toLowerCase()}`}
+                    href={`/collection/${collection?.collectionAddress?.toLowerCase()}`}
                   >
-                    <div className="md:flex-1 md:h-72 h-40 rounded-lg relative group ">
+                    <div className="rounded-lg w-full h-full group cursor-pointer relative">
                       <img
-                        src={allCollectionsData[0]?.image}
-                        className="w-full h-full object-cover"
+                        src={collection?.image}
+                        className="w-full h-full object-cover rounded-md"
                         alt="marketplan"
                       />
-                      {/* show listing count which is collection.nfts.length when hover over parent */}
                       <div className="absolute bottom-0 left-0 w-full h-full bg-gradient-to-t from-black to-transparent hidden justify-center items-center group-hover:flex cursor-pointer">
                         <div className="text-center">
                           <p className="font-semibold md:text-2xl text-base ">
-                            {allCollectionsData[0]?.name}
+                            {collection?.name}
                           </p>
                           <p className="text-white md:text-[18px] text-sm font-semibold">
-                            {allCollectionsData[0]?.nfts?.length} Listings
+                            {collection?.nfts?.length} Listings
                           </p>
                         </div>
                       </div>
                     </div>
                   </Link>
-                )}
-                {allCollectionsData[0] && (
-                  <Link
-                    href={`/collection/${allCollectionsData[1]?.collectionAddress?.toLowerCase()}`}
-                  >
-                    <div className="md:flex-1 md:h-72 h-40 rounded-lg relative group ">
-                      {allCollectionsData[1]?.image && (
-                        <>
-                          <img
-                            src={allCollectionsData[1]?.image}
-                            className="w-full h-full object-cover"
-                            alt="marketplan"
-                          />
-                          {/* show listing count which is collection.nfts.length when hover over parent */}
-                          <div className="absolute bottom-0 left-0 w-full h-full bg-gradient-to-t from-black to-transparent hidden justify-center items-center group-hover:flex cursor-pointer">
-                            <div className="text-center">
-                              <p className="font-semibold md:text-2xl text-base ">
-                                {allCollectionsData[1]?.name}
-                              </p>
-                              <p className="text-white md:text-[18px] text-sm font-semibold">
-                                {allCollectionsData[1]?.nfts?.length} Listings
-                              </p>
-                            </div>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </Link>
-                )}
-              </div>
-              {allCollectionsData[2] && (
-                <div className="justify-center grid md:grid-cols-3 grid-cols-2 md:grid-rows-1 grid-rows-2 w-full md:h-72 md:gap-6 gap-3 h-72 ">
-                  {allCollectionsData[2] && (
-                    <Link
-                      href={`/collection/${allCollectionsData[2]?.collectionAddress?.toLowerCase()}`}
-                    >
-                      <div className="rounded-lg w-full h-full group cursor-pointer relative">
-                        <img
-                          src={allCollectionsData[2]?.image}
-                          className="w-full h-full object-cover"
-                          alt="marketplan"
-                        />
-
-                        {/* show listing count which is collection.nfts.length when hover over parent */}
-                        <div className="absolute bottom-0 left-0 w-full h-full bg-gradient-to-t from-black to-transparent hidden justify-center items-center group-hover:flex cursor-pointer">
-                          <div className="text-center">
-                            <p className="font-semibold md:text-2xl text-base ">
-                              {allCollectionsData[2]?.name}
-                            </p>
-                            <p className="text-white md:text-[18px] text-sm font-semibold">
-                              {allCollectionsData[2]?.nfts?.length} Listings
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  )}
-                  {allCollectionsData[3] && (
-                    <Link
-                      href={`/collection/${allCollectionsData[3]?.collectionAddress?.toLowerCase()}`}
-                    >
-                      <div className="rounded-lg w-full h-full group cursor-pointer relative">
-                        <img
-                          src={allCollectionsData[3]?.image}
-                          className="w-full h-full object-cover"
-                          alt="marketplan"
-                        />
-                        <div className="absolute bottom-0 left-0 w-full h-full bg-gradient-to-t from-black to-transparent hidden justify-center items-center group-hover:flex cursor-pointer">
-                          <div className="text-center">
-                            <p className="font-semibold md:text-2xl text-base ">
-                              {allCollectionsData[3]?.name}
-                            </p>
-                            <p className="text-white md:text-[18px] text-sm font-semibold">
-                              {allCollectionsData[3]?.nfts.length} Listings
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  )}
-                  {allCollectionsData[4] && (
-                    <Link
-                      href={`/collection/${allCollectionsData[4]?.collectionAddress?.toLowerCase()}`}
-                    >
-                      <div className="rounded-lg w-full h-full group cursor-pointer relative">
-                        <img
-                          src={allCollectionsData[4]?.image}
-                          className="w-full h-full object-cover"
-                          alt="marketplan"
-                        />
-                        <div className="absolute bottom-0 left-0 w-full h-full bg-gradient-to-t from-black to-transparent hidden justify-center items-center group-hover:flex cursor-pointer">
-                          <div className="text-center">
-                            <p className="font-semibold md:text-2xl text-base ">
-                              {allCollectionsData[4]?.name}
-                            </p>
-                            <p className="text-white md:text-[18px] text-sm font-semibold">
-                              {allCollectionsData[4]?.nfts?.length} Listings
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  )}
-                  {allCollectionsData[5] && (
-                    <Link
-                      href={`/collection/${allCollectionsData[5]?.collectionAddress?.toLowerCase()}`}
-                    >
-                      <div className="bg-stone-200 rounded-lg md:hidden  w-full h-full group">
-                        <img
-                          src={allCollectionsData[5]?.image}
-                          className="w-full h-full object-cover"
-                          alt="marketplan"
-                        />
-                        <div className="absolute bottom-0 left-0 w-full h-full bg-gradient-to-t from-black to-transparent hidden justify-center items-center group-hover:flex cursor-pointer">
-                          <div className="text-center">
-                            <p className="font-semibold md:text-2xl text-base ">
-                              {allCollectionsData[5]?.name}
-                            </p>
-                            <p className="text-white md:text-[18px] text-sm font-semibold">
-                              {allCollectionsData[5]?.nfts?.length} Listings
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  )}
-                </div>
-              )}
+                );
+              })}
             </div>
           )}
+
           {allCollectionsData.length == 0 && !allCollectionLoading && (
             <p className="text-center relative top-10">no collection to show</p>
           )}
@@ -370,9 +401,9 @@ export default function Home() {
           )}
         </div>
         {/* Contact us */}
-        {/* <div className="my-[120px] px-[75px]">
+        <div className="md:my-[120px] my-[60px] md:px-[75px] px-5">
           <Contact />
-        </div> */}
+        </div>
       </div>
     </>
   );
