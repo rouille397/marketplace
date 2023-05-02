@@ -51,7 +51,8 @@ const Collection = () => {
         ...doc.data(),
       }));
       console.log("nftsData", nftsData);
-      setNftsList(nftsData);
+      const availableNftsData = nftsData.filter((item) => !item.soldAt);
+      setNftsList(availableNftsData);
     })();
   }, [collectionId]);
 
