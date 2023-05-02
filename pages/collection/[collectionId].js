@@ -1,41 +1,26 @@
-import { useAddress, useSDK } from "@thirdweb-dev/react";
 import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
 import Head from "next/head";
-import Image from "next/image";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 import NftCard from "../../components/NftCard";
 import { db } from "../../helpers/firebase-config";
-import creatorImage from "../../public/images/creator-image.png";
-import { MarketplaceAddr } from "../../addresses";
+import Button from "../../components/Button";
 
 const Collection = () => {
   const [collectionData, setCollectionData] = useState([]);
   const [collectionDataLoading, setCollectionDataLoading] = useState(false);
   const [nftsList, setNftsList] = useState([]);
-  const [contract, setContract] = useState(null);
-  const address = useAddress();
   const router = useRouter();
   const { collectionId } = router.query;
-  console.log("collectionId", collectionData);
-  const sdk = useSDK();
-  useEffect(() => {
-    if (!sdk) return;
-    const getContract = async () => {
-      const contract = await sdk.getContract(MarketplaceAddr, "marketplace");
-      setContract(contract);
-    };
-    getContract();
-  }, [sdk]);
 
   useEffect(() => {
-    if (!address) return;
+    if (!collectionId) return;
     (async () => {
       setCollectionDataLoading(true);
       const collectionRef = collection(db, "collections");
       const q = query(
         collectionRef,
-        where("collectionAddress", "==", collectionId)
+        where("collectionAddress", "==", collectionId?.toLowerCase())
       );
       const collectionSnapshot = await getDocs(q);
       const collectionData = collectionSnapshot.docs.map((doc) => ({
@@ -46,22 +31,26 @@ const Collection = () => {
       setCollectionDataLoading(false);
       setCollectionData(collectionData);
     })();
-  }, [address, contract]);
+  }, [collectionId]);
 
   useEffect(() => {
+    if (!collectionId) return;
+
     (async () => {
       // fetch nfts of this collection from firebase
       const nftsRef = collection(db, "nfts");
       const q = query(
         nftsRef,
-        where("assetContractAddress", "==", collectionId),
-        orderBy("listingId", "desc")
+        where("assetContractAddress", "==", collectionId?.toLowerCase()),
+        orderBy("buyoutPricePerToken", "asc")
       );
+      console.log("q", q);
       const nftsSnapshot = await getDocs(q);
       const nftsData = nftsSnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
+      console.log("nftsData", nftsData);
       setNftsList(nftsData);
     })();
   }, [collectionId]);
@@ -83,27 +72,28 @@ const Collection = () => {
         />
       </Head>
       <div className="px-4 py-6 lg:px-[75px] lg:py-[120px]">
-        <div className="w-full h-[300px] bg-[#16192A] border-[2px] border-[#2E3150] rounded-[10px] flex justify-center items-end">
-          <div className="relative top-[100px] text-center">
-            <Image
-              src={collectionData[0]?.image || creatorImage}
-              alt="Nitee marketplace"
-              width={240}
-              height={240}
-              className=""
-            />
-            <h1 className="text-textLight font-extrabold text-[22px]">
-              {collectionData[0] &&
-                collectionData[0]?.collectionAddress?.slice(0, 5) +
-                  "..." +
-                  collectionData[0]?.collectionAddress?.slice(-4)}
-            </h1>
-            <p className="text-[#989898] text-lg font-semibold">@laural123</p>
-          </div>
+        <div className="flex md:px-10 md:pb-10 pb-5 px-5 flex-col items-center w-full bg-[#16192A] border-[2px] border-[#2E3150] rounded-[10px] md:pt-10 pt-5 lg:mt-0 mt-20">
+          <h1 className="text-4xl font-bold text-center justify-center mb-4">
+            {collectionData[0]?.name}
+          </h1>
+          <p>{collectionData[0]?.description}</p>
+
+          <Button
+            onClick={() => {
+              router.push({
+                pathname: `/create`,
+                query: { colectionAddr: collectionId?.toLowerCase() },
+              });
+            }}
+            className="mt-10 uppercase font-bold text-base text-white flex gap-2 items-center px-6 py-3 rounded-xl walletConnectButton"
+          >
+            List NFT
+          </Button>
         </div>
-        <div className="mt-[120px] md:mt-[250px] grid md:grid-cols-3 min-[1380px]:grid-cols-4 gap-4 ">
+        <div className="mt-[50px] md:mt-[100px] grid md:grid-cols-3 min-[1380px]:grid-cols-4 gap-4 ">
           {nftsList.map((item) => (
             <div
+              key={item.listingId}
               className="cursor-pointer"
               onClick={() =>
                 router.push({
@@ -111,9 +101,10 @@ const Collection = () => {
                 })
               }
             >
+              {console.log("item", item)}
               <NftCard
                 key={item.id}
-                name={item.name}
+                name={`${item.name} (#${item.tokenId})`}
                 price={item.buyoutPricePerToken}
                 symbol={"CFX"}
                 user={item.seller.slice(0, 5) + "..." + item.seller.slice(-4)}

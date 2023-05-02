@@ -50,7 +50,7 @@ const NftCard: FC<INftCardProps> = ({
         </Button>
       ) : (
         <Button className="hidden text-[19px] font-medium text-white rounded-xl w-full py-4  collect-button">
-          {type ? "List NFTs" : "Collect Now"}
+          {type ? "List NFT" : "Collect Now"}
         </Button>
       )}
     </div>

@@ -5,11 +5,7 @@ import Head from "next/head";
 import { Roboto } from "next/font/google";
 import "@rainbow-me/rainbowkit/styles.css";
 import Layout from "@/components/Layout";
-import {
-  ConfluxEspace,
-  ConfluxEspaceTestnet,
-  Goerli,
-} from "@thirdweb-dev/chains";
+import { ConfluxEspace } from "@thirdweb-dev/chains";
 
 const roboto = Roboto({
   weight: ["400", "700"],

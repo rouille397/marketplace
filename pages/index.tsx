@@ -35,7 +35,11 @@ export default function Home() {
     (async () => {
       setRecentlyAddedLoading(true);
       const nftsRef = collection(db, "nfts");
-      const q = query(nftsRef, orderBy("listingId", "desc"), limit(20));
+      const q = query(
+        nftsRef,
+        orderBy("buyoutPricePerToken", "asc"),
+        limit(20)
+      );
       const querySnapshot = await getDocs(q);
       const nfts = querySnapshot.docs.map((doc) => doc.data());
       console.log("nftsss", nfts);
@@ -65,17 +69,11 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    //only get collections in which collection.nfts.length > 0
     (async () => {
       if (!selectedType) {
         setAllCollectionLoading(true);
         const collectionRef = collection(db, "collections");
-        const q = query(
-          collectionRef,
-          where("noNft", "==", false),
-          orderBy("createdAt", "desc"),
-          limit(10)
-        );
+        const q = query(collectionRef, orderBy("createdAt", "desc"), limit(10));
         const collectionSnapshot = await getDocs(q);
         const collectionList = collectionSnapshot.docs.map((doc) => ({
           id: doc.id,
@@ -86,13 +84,11 @@ export default function Home() {
       }
       if (selectedType) {
         setAllCollectionLoading(true);
-
         const collectionRef = collection(db, "collections");
         const q = query(
           collectionRef,
           where("category", "==", selectedType),
-          where("noNft", "==", false),
-          orderBy("createdAt", "desc"),
+          orderBy("buyoutPricePerToken", "asc"),
           limit(10)
         );
         const collectionSnapshot = await getDocs(q);
@@ -181,11 +177,11 @@ export default function Home() {
                 {allCollectionsData[0] && (
                   // show listing count when we hover over parent
                   <Link
-                    href={`/collection/${allCollectionsData[0].collectionAddress}`}
+                    href={`/collection/${allCollectionsData[0]?.collectionAddress?.toLowerCase()}`}
                   >
                     <div className="md:flex-1 md:h-72 h-40 rounded-lg relative group ">
                       <img
-                        src={allCollectionsData[0].image}
+                        src={allCollectionsData[0]?.image}
                         className="w-full h-full object-cover"
                         alt="marketplan"
                       />
@@ -193,10 +189,10 @@ export default function Home() {
                       <div className="absolute bottom-0 left-0 w-full h-full bg-gradient-to-t from-black to-transparent hidden justify-center items-center group-hover:flex cursor-pointer">
                         <div className="text-center">
                           <p className="font-semibold md:text-2xl text-base ">
-                            {allCollectionsData[0].name}
+                            {allCollectionsData[0]?.name}
                           </p>
                           <p className="text-white md:text-[18px] text-sm font-semibold">
-                            {allCollectionsData[0].nfts.length} Listings
+                            {allCollectionsData[0]?.nfts?.length} Listings
                           </p>
                         </div>
                       </div>
@@ -205,13 +201,13 @@ export default function Home() {
                 )}
                 {allCollectionsData[0] && (
                   <Link
-                    href={`/collection/${allCollectionsData[0].collectionAddress}`}
+                    href={`/collection/${allCollectionsData[1]?.collectionAddress?.toLowerCase()}`}
                   >
                     <div className="md:flex-1 md:h-72 h-40 rounded-lg relative group ">
                       {allCollectionsData[1]?.image && (
                         <>
                           <img
-                            src={allCollectionsData[1].image}
+                            src={allCollectionsData[1]?.image}
                             className="w-full h-full object-cover"
                             alt="marketplan"
                           />
@@ -219,10 +215,10 @@ export default function Home() {
                           <div className="absolute bottom-0 left-0 w-full h-full bg-gradient-to-t from-black to-transparent hidden justify-center items-center group-hover:flex cursor-pointer">
                             <div className="text-center">
                               <p className="font-semibold md:text-2xl text-base ">
-                                {allCollectionsData[1].name}
+                                {allCollectionsData[1]?.name}
                               </p>
                               <p className="text-white md:text-[18px] text-sm font-semibold">
-                                {allCollectionsData[1].nfts.length} Listings
+                                {allCollectionsData[1]?.nfts?.length} Listings
                               </p>
                             </div>
                           </div>
@@ -236,11 +232,11 @@ export default function Home() {
                 <div className="justify-center grid md:grid-cols-3 grid-cols-2 md:grid-rows-1 grid-rows-2 w-full md:h-72 md:gap-6 gap-3 h-72 ">
                   {allCollectionsData[2] && (
                     <Link
-                      href={`/collection/${allCollectionsData[2].collectionAddress}`}
+                      href={`/collection/${allCollectionsData[2]?.collectionAddress?.toLowerCase()}`}
                     >
                       <div className="rounded-lg w-full h-full group cursor-pointer relative">
                         <img
-                          src={allCollectionsData[2].image}
+                          src={allCollectionsData[2]?.image}
                           className="w-full h-full object-cover"
                           alt="marketplan"
                         />
@@ -249,10 +245,10 @@ export default function Home() {
                         <div className="absolute bottom-0 left-0 w-full h-full bg-gradient-to-t from-black to-transparent hidden justify-center items-center group-hover:flex cursor-pointer">
                           <div className="text-center">
                             <p className="font-semibold md:text-2xl text-base ">
-                              {allCollectionsData[2].name}
+                              {allCollectionsData[2]?.name}
                             </p>
                             <p className="text-white md:text-[18px] text-sm font-semibold">
-                              {allCollectionsData[2].nfts.length} Listings
+                              {allCollectionsData[2]?.nfts?.length} Listings
                             </p>
                           </div>
                         </div>
@@ -261,21 +257,21 @@ export default function Home() {
                   )}
                   {allCollectionsData[3] && (
                     <Link
-                      href={`/collection/${allCollectionsData[3].collectionAddress}`}
+                      href={`/collection/${allCollectionsData[3]?.collectionAddress?.toLowerCase()}`}
                     >
                       <div className="rounded-lg w-full h-full group cursor-pointer relative">
                         <img
-                          src={allCollectionsData[3].image}
+                          src={allCollectionsData[3]?.image}
                           className="w-full h-full object-cover"
                           alt="marketplan"
                         />
                         <div className="absolute bottom-0 left-0 w-full h-full bg-gradient-to-t from-black to-transparent hidden justify-center items-center group-hover:flex cursor-pointer">
                           <div className="text-center">
                             <p className="font-semibold md:text-2xl text-base ">
-                              {allCollectionsData[3].name}
+                              {allCollectionsData[3]?.name}
                             </p>
                             <p className="text-white md:text-[18px] text-sm font-semibold">
-                              {allCollectionsData[3].nfts.length} Listings
+                              {allCollectionsData[3]?.nfts.length} Listings
                             </p>
                           </div>
                         </div>
@@ -284,21 +280,21 @@ export default function Home() {
                   )}
                   {allCollectionsData[4] && (
                     <Link
-                      href={`/collection/${allCollectionsData[4].collectionAddress}`}
+                      href={`/collection/${allCollectionsData[4]?.collectionAddress?.toLowerCase()}`}
                     >
                       <div className="rounded-lg w-full h-full group cursor-pointer relative">
                         <img
-                          src={allCollectionsData[4].image}
+                          src={allCollectionsData[4]?.image}
                           className="w-full h-full object-cover"
                           alt="marketplan"
                         />
                         <div className="absolute bottom-0 left-0 w-full h-full bg-gradient-to-t from-black to-transparent hidden justify-center items-center group-hover:flex cursor-pointer">
                           <div className="text-center">
                             <p className="font-semibold md:text-2xl text-base ">
-                              {allCollectionsData[4].name}
+                              {allCollectionsData[4]?.name}
                             </p>
                             <p className="text-white md:text-[18px] text-sm font-semibold">
-                              {allCollectionsData[4].nfts.length} Listings
+                              {allCollectionsData[4]?.nfts?.length} Listings
                             </p>
                           </div>
                         </div>
@@ -307,21 +303,21 @@ export default function Home() {
                   )}
                   {allCollectionsData[5] && (
                     <Link
-                      href={`/collection/${allCollectionsData[5].collectionAddress}`}
+                      href={`/collection/${allCollectionsData[5]?.collectionAddress?.toLowerCase()}`}
                     >
                       <div className="bg-stone-200 rounded-lg md:hidden  w-full h-full group">
                         <img
-                          src={allCollectionsData[5].image}
+                          src={allCollectionsData[5]?.image}
                           className="w-full h-full object-cover"
                           alt="marketplan"
                         />
                         <div className="absolute bottom-0 left-0 w-full h-full bg-gradient-to-t from-black to-transparent hidden justify-center items-center group-hover:flex cursor-pointer">
                           <div className="text-center">
                             <p className="font-semibold md:text-2xl text-base ">
-                              {allCollectionsData[5].name}
+                              {allCollectionsData[5]?.name}
                             </p>
                             <p className="text-white md:text-[18px] text-sm font-semibold">
-                              {allCollectionsData[5].nfts.length} Listings
+                              {allCollectionsData[5]?.nfts?.length} Listings
                             </p>
                           </div>
                         </div>

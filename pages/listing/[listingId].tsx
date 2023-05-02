@@ -109,7 +109,7 @@ const ListingPage: NextPage = () => {
       querySnapshot.forEach(async (doc) => {
         await updateDoc(doc.ref, {
           soldAt: new Date().getTime(),
-          buyer: address,
+          buyer: address?.toLowerCase(),
         });
       });
 
@@ -183,11 +183,46 @@ const ListingPage: NextPage = () => {
         });
         alert("Listing cancelled successfully!");
         router.push("/");
-      } else {
+      } else if (listing?.type === 1) {
         let tx: any = await contract.auction.cancelListing.prepare(listingId);
         const gasLimit = await tx.estimateGasLimit(); // Estimate the gas limit
         await tx.setGasLimit(Math.floor(gasLimit.toString() * 1.6));
         tx = await tx.execute(); // Execute the transaction
+
+        console.log(tx, "txResult");
+
+        // delete data from firebase
+        const q = query(
+          collection(db, "nfts"),
+          where("listingId", "==", listingId)
+        );
+        // get doc id
+
+        const querySnapshot = await getDocs(q);
+        querySnapshot.forEach(async (doc) => {
+          await deleteDoc(doc.ref);
+        });
+
+        // delete it from array nfts containing nft token ids in collection "collections"
+
+        const q2 = query(
+          collection(db, "collections"),
+          where("nfts", "array-contains", listing.asset.id)
+        );
+        const querySnapshot2 = await getDocs(q2);
+        querySnapshot2.forEach(async (doc) => {
+          const data = doc.data();
+
+          const nfts = data.nfts;
+          const index = nfts.indexOf(listing.asset.id);
+          if (index > -1) {
+            nfts.splice(index, 1);
+          }
+          await updateDoc(doc.ref, {
+            nfts: nfts,
+          });
+        });
+
         alert("Listing cancelled successfully!");
       }
     } catch (e) {
@@ -278,6 +313,36 @@ const ListingPage: NextPage = () => {
     try {
       await contract.auction.closeListing(listingId, address);
       console.log("NFT transferred back to you successfuly");
+      // remove nft from firebase
+      const q = query(
+        collection(db, "nfts"),
+        where("listingId", "==", listingId)
+      );
+      const querySnapshot = await getDocs(q);
+      querySnapshot.forEach(async (doc) => {
+        await deleteDoc(doc.ref);
+      });
+      // delete it from array nfts containing nft token ids in collection "collections"
+
+      const q2 = query(
+        collection(db, "collections"),
+        where("nfts", "array-contains", listing.asset.id)
+      );
+      const querySnapshot2 = await getDocs(q2);
+      querySnapshot2.forEach(async (doc) => {
+        const data = doc.data();
+
+        const nfts = data.nfts;
+        const index = nfts.indexOf(listing.asset.id);
+        if (index > -1) {
+          nfts.splice(index, 1);
+        }
+        await updateDoc(doc.ref, {
+          nfts: nfts,
+        });
+      });
+      alert("Transfer successful!");
+
       router.push("/");
     } catch (e) {
       console.log(e);
@@ -309,8 +374,11 @@ const ListingPage: NextPage = () => {
   };
 
   let ownerButton;
-  if (listing.sellerAddress == address) {
-    if (listing.type == 0 && listing.sellerAddress == address) {
+  if (listing.sellerAddress?.toLowerCase() == address?.toLowerCase()) {
+    if (
+      listing.type == 0 &&
+      listing.sellerAddress?.toLowerCase() == address?.toLowerCase()
+    ) {
       ownerButton = (
         <button
           className="uppercase font-bold border-none text-base text-white gap-2 px-6 py-3 rounded-xl walletConnectButton  text-center !flex !items-center !justify-center flex-1 md:w-auto w-full xl:mr-5 max-w-[618px]"
@@ -492,7 +560,7 @@ const ListingPage: NextPage = () => {
                     Sold At:
                   </b>
                   <span className="text-[#878788] font-normal md:text-xl text-base ">
-                    {new Date(alreadySold).toLocaleString()}
+                    {new Date(alreadySold)?.toLocaleString()}
                   </span>
                 </p>
               )}
@@ -509,10 +577,10 @@ const ListingPage: NextPage = () => {
                       {listing.type == 0
                         ? new Date(
                             +listing?.startTimeInSeconds?.toString() * 1000
-                          ).toLocaleString()
+                          )?.toLocaleString()
                         : new Date(
                             +listing?.startTimeInEpochSeconds?.toString() * 1000
-                          ).toLocaleString()}
+                          )?.toLocaleString()}
                     </span>
                   </p>
                 </div>
@@ -533,24 +601,27 @@ const ListingPage: NextPage = () => {
                   </p>
                 </div>
               )}
-              {listing.type == 1 && address == listing.sellerAddress && (
-                <div className="mt-2">
-                  <p>
-                    <b className="font-extrabold md:text-xl text-base leading-6 capitalize tracking-wide mr-2">
-                      Winning Bid
-                    </b>
-                    <span className="text-[#878788] font-normal md:text-xl text-base ">
-                      {winningBid}
-                    </span>
-                  </p>
-                </div>
-              )}
+              {listing.type == 1 &&
+                address?.toLowerCase() ==
+                  listing?.sellerAddress?.toLowerCase() && (
+                  <div className="mt-2">
+                    <p>
+                      <b className="font-extrabold md:text-xl text-base leading-6 capitalize tracking-wide mr-2">
+                        Winning Bid
+                      </b>
+                      <span className="text-[#878788] font-normal md:text-xl text-base ">
+                        {winningBid}
+                      </span>
+                    </p>
+                  </div>
+                )}
             </div>
           </div>
 
           {
             <div className="flex gap-5 items-center w-full xl:pr-10 md:flex-row flex-col">
-              {address == listing.sellerAddress ? (
+              {address?.toLowerCase() ==
+              listing.sellerAddress?.toLowerCase() ? (
                 ownerButton
               ) : (
                 <button
@@ -571,45 +642,47 @@ const ListingPage: NextPage = () => {
                 </button>
               )}
 
-              {address !== listing.sellerAddress && listing.type !== 0 && (
-                <>
-                  <p className="text-slate-500 md:flex hidden">|</p>
-                  <p className="text-slate-500 md:hidden">OR</p>
+              {address?.toLowerCase() !==
+                listing?.sellerAddress?.toLowerCase() &&
+                listing.type !== 0 && (
+                  <>
+                    <p className="text-slate-500 md:flex hidden">|</p>
+                    <p className="text-slate-500 md:hidden">OR</p>
 
-                  <div
-                    className="md:w-auto w-full"
-                    style={{
-                      display: "flex",
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 8,
-                    }}
-                  >
-                    <input
-                      type="text"
-                      name="bidAmount"
-                      className={styles.textInput}
-                      onChange={(e) => setBidAmount(e.target.value)}
-                      placeholder="Amount"
-                      style={{ marginTop: 0, marginLeft: 0, width: 128 }}
-                      value={bidAmount}
-                      disabled={secondsTillEnd < 0}
-                    />
-
-                    <button
-                      className={`${styles.mainButton} ml-2`}
-                      onClick={createBidHandler}
-                      disabled={secondsTillEnd < 0}
+                    <div
+                      className="md:w-auto w-full"
                       style={{
-                        borderStyle: "none",
-                        width: "fit-content",
+                        display: "flex",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 8,
                       }}
                     >
-                      Bid Now
-                    </button>
-                  </div>
-                </>
-              )}
+                      <input
+                        type="text"
+                        name="bidAmount"
+                        className={styles.textInput}
+                        onChange={(e) => setBidAmount(e.target.value)}
+                        placeholder="Amount"
+                        style={{ marginTop: 0, marginLeft: 0, width: 128 }}
+                        value={bidAmount}
+                        disabled={secondsTillEnd < 0}
+                      />
+
+                      <button
+                        className={`${styles.mainButton} ml-2`}
+                        onClick={createBidHandler}
+                        disabled={secondsTillEnd < 0}
+                        style={{
+                          borderStyle: "none",
+                          width: "fit-content",
+                        }}
+                      >
+                        Bid Now
+                      </button>
+                    </div>
+                  </>
+                )}
             </div>
           }
           <div className="h-6 flex justify-end w-full">
@@ -624,7 +697,8 @@ const ListingPage: NextPage = () => {
             {listing.type == 1 &&
               minNextBid &&
               +bidAmount < +minNextBid &&
-              address !== listing.sellerAddress && (
+              address?.toLowerCase() !==
+                listing?.sellerAddress?.toLowerCase() && (
                 <p className="text-right w-full mt-2 pr-3">
                   Minimum next bid: {minNextBid}
                 </p>

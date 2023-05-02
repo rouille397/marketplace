@@ -16,11 +16,7 @@ const All = () => {
       if (!selectedType) {
         setAllCollectionLoading(true);
         const collectionRef = collection(db, "collections");
-        const q = query(
-          collectionRef,
-          where("noNft", "==", false),
-          orderBy("createdAt", "desc")
-        );
+        const q = query(collectionRef, orderBy("createdAt", "desc"));
         const collectionSnapshot = await getDocs(q);
         const collectionList = collectionSnapshot.docs.map((doc) => ({
           id: doc.id,
@@ -37,7 +33,6 @@ const All = () => {
         const q = query(
           collectionRef,
           where("category", "==", selectedType),
-          where("noNft", "==", false),
           orderBy("createdAt", "desc")
         );
         const collectionSnapshot = await getDocs(q);
@@ -84,7 +79,7 @@ const All = () => {
             <>
               {allCollectionsData.map((collection) => (
                 <Link
-                  href={`/collection/${collection.collectionAddress}`}
+                  href={`/collection/${collection?.collectionAddress?.toLowerCase()}`}
                   key={collection.id}
                 >
                   <div

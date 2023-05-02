@@ -26,7 +26,7 @@ const Header = () => {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      if (window.ethereum) {
+      if (window?.ethereum) {
         setMetamaskInstalled(true);
       }
     }

@@ -1,10 +1,11 @@
 import { useRouter } from "next/router";
-import React from "react";
+import React, { useEffect } from "react";
 import { useState } from "react";
 import { db, storage } from "../../helpers/firebase-config";
 import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
 import { collection, addDoc, query, where, getDocs } from "firebase/firestore";
 import { useAddress } from "@thirdweb-dev/react";
+import { ADMIN } from "../../addresses";
 
 const New = () => {
   const [collectionName, setCollectionName] = useState("");
@@ -13,57 +14,72 @@ const New = () => {
   const [collectionImagePreview, setCollectionImagePreview] = useState("");
   const [collectionCategory, setCollectionCategory] = useState("Art");
   const [collectionAddress, setCollectionAddress] = useState("");
+  const [startLoading, setStartLoading] = useState(false);
+
   const router = useRouter();
-  const address = useAddress();
+  const addr = useAddress();
+  const address = addr?.toLowerCase();
+
+  useEffect(() => {
+    if (!address) return;
+    if (address !== ADMIN?.toLowerCase()) router.push("/");
+  }, [address]);
 
   const createCollectionHandler = async () => {
     if (!address || !collectionAddress) return;
-    //check if collection with this collectionAddress already exists
-    const q = query(
-      collection(db, "collections"),
-      where("collectionAddress", "==", collectionAddress)
-    );
-    const querySnapshot = await getDocs(q);
-    if (!querySnapshot.empty) {
-      alert("Collection with this address already exists");
-      return;
-    }
+    try {
+      setStartLoading(true);
+      //check if collection with this collectionAddress already exists
+      const q = query(
+        collection(db, "collections"),
+        where("collectionAddress", "==", collectionAddress?.toLowerCase())
+      );
+      const querySnapshot = await getDocs(q);
+      if (!querySnapshot.empty) {
+        alert("Collection with this address already exists");
+        setStartLoading(false);
+        return;
+      }
 
-    // add in firebase v9 storage
-    let fileUrl = "";
-    if (collectionImage) {
-      const storageRef = ref(storage, `collections/${collectionImage.name}`);
-      await uploadBytes(storageRef, collectionImage);
-      fileUrl = await getDownloadURL(storageRef);
-    }
+      // add in firebase v9 storage
+      let fileUrl = "";
+      if (collectionImage) {
+        const storageRef = ref(storage, `collections/${collectionImage.name}`);
+        await uploadBytes(storageRef, collectionImage);
+        fileUrl = await getDownloadURL(storageRef);
+      }
 
-    // add in firestore
-    const collectionRef = collection(db, "collections");
-    const payload = {
-      name: collectionName,
-      description: collectionDescription,
-      image: fileUrl || "",
-      category: collectionCategory,
-      creator: address,
-      createdAt: new Date().getTime(),
-      collectionAddress: collectionAddress,
-      nfts: [],
-    };
-    console.log(payload);
-    const docRef = await addDoc(collectionRef, payload);
-    setCollectionName("");
-    setCollectionDescription("");
-    setCollectionImage("");
-    setCollectionImagePreview("");
-    setCollectionCategory("");
-    router.push({
-      pathname: "/create",
-      query: { colectionAddr: collectionAddress },
-    });
-    setCollectionAddress("");
-    console.log("Document written with ID: ", docRef.id);
+      // add in firestore
+      const collectionRef = collection(db, "collections");
+      const payload = {
+        name: collectionName,
+        description: collectionDescription,
+        image: fileUrl || "",
+        category: collectionCategory,
+        creator: address?.toLowerCase(),
+        createdAt: new Date().getTime(),
+        collectionAddress: collectionAddress?.toLowerCase(),
+        nfts: [],
+      };
+      console.log(payload);
+      const docRef = await addDoc(collectionRef, payload);
+      setCollectionName("");
+      setCollectionDescription("");
+      setCollectionImage("");
+      setCollectionImagePreview("");
+      setCollectionCategory("");
+      router.push({
+        pathname: "/create",
+        query: { colectionAddr: collectionAddress?.toLowerCase() },
+      });
+      setCollectionAddress("");
+      console.log("Document written with ID: ", docRef.id);
+      setStartLoading(false);
+    } catch (err) {
+      console.log(err);
+      setStartLoading(false);
+    }
   };
-  console.log("collectioncategory", collectionCategory);
   return (
     <div className="px-4 pt-[80px] lg:pt-[150px] flex justify-center mb-6">
       {/* Form Section */}
@@ -163,6 +179,12 @@ const New = () => {
           Create Collection
         </button>
       </div>
+      {/*  make fullscreen loader */}
+      {startLoading && (
+        <div className="fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-50 flex justify-center items-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-white"></div>
+        </div>
+      )}
     </div>
   );
 };

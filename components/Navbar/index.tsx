@@ -18,6 +18,7 @@ import {
   useNetwork,
   useNetworkMismatch,
 } from "@thirdweb-dev/react";
+import { ADMIN } from "@/addresses";
 
 const Navbar: FC = () => {
   const [color, setColor] = useState(false);
@@ -34,15 +35,15 @@ const Navbar: FC = () => {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      if (window.ethereum) {
+      if (window?.ethereum) {
         setMetamaskInstalled(true);
       }
     }
   }, []);
 
   useEffect(() => {
-    window.addEventListener("scroll", changeColor);
-    return () => window.removeEventListener("scroll", changeColor);
+    window?.addEventListener("scroll", changeColor);
+    return () => window?.removeEventListener("scroll", changeColor);
   }, []);
 
   const changeColor = () => {
@@ -106,17 +107,26 @@ const Navbar: FC = () => {
           </h1>
         </div>
       </Link>
-      <div className="hidden lg:flex gap-9">
-        {NAVBAR?.map((item) => (
-          <Link
-            key={item.name}
-            href={item.link}
-            className="text-base font-bold text-white uppercase"
-          >
-            {item.name}
-          </Link>
-        ))}
-      </div>
+      {address?.toLowerCase() == ADMIN?.toLowerCase() && (
+        <>
+          <div className="hidden lg:flex gap-9">
+            <Link
+              href={"/"}
+              className="text-base font-bold text-white uppercase"
+            >
+              Home
+            </Link>
+
+            <Link
+              href={"/collection/new"}
+              className="text-base font-bold text-white uppercase"
+            >
+              Post Collection
+            </Link>
+          </div>
+        </>
+      )}
+
       <div className="hidden lg:flex gap-5">
         <a href="https://twitter.com/nitfeemarketCFX" target={"_blank"}>
           <Button

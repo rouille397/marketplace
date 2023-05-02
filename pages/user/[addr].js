@@ -1,4 +1,5 @@
 import { useAddress } from "@thirdweb-dev/react";
+import axios from "axios";
 import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
 import Head from "next/head";
 import Image from "next/image";
@@ -9,33 +10,93 @@ import { db } from "../../helpers/firebase-config";
 import creatorImage from "../../public/images/creator-image.png";
 
 const creator = () => {
-  const [collectionData, setCollectionData] = useState([]);
-  const [collectionDataLoading, setCollectionDataLoading] = useState(false);
-  const address = useAddress();
+  const [nftsData, setNftsData] = useState([]);
+  const [nftsDataLoading, setNftsDataLoading] = useState(true);
   const router = useRouter();
+  const address = useAddress();
 
   useEffect(() => {
-    if (!address) return;
+    // get all collections from firebase and then make array of collectionAddress
     (async () => {
-      setCollectionDataLoading(true);
-      const collectionRef = collection(db, "collections");
-      const q = query(
-        collectionRef,
-        where("creator", "==", address),
-        orderBy("createdAt", "desc")
-      );
-      const collectionSnapshot = await getDocs(q);
-      const collectionList = collectionSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      console.log("collectionList", collectionList);
-      setCollectionDataLoading(false);
-      setCollectionData(collectionList);
-    })();
-  }, [address]);
+      try {
+        setNftsDataLoading(true);
+        const collectionRef = collection(db, "collections");
+        const collectionSnapshot = await getDocs(collectionRef);
+        const collectionList = collectionSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        console.log("collectionList", collectionList);
+        let collectionAddress = [];
+        collectionList.map((item) => {
+          collectionAddress.push(item.collectionAddress?.toLowerCase());
+        });
+        console.log("collectionAddress", collectionAddress);
 
-  // get collection data from firbase using address
+        let collectionAddressAndImages = {};
+        for (let i = 0; i < collectionList.length; i++) {
+          collectionAddressAndImages[
+            collectionList[i].collectionAddress?.toLowerCase()
+          ] = collectionList[i].image;
+        }
+        console.log("collectionAddressAndImages", collectionAddressAndImages);
+        // collectionAddressAndName
+
+        let collectionAddressAndName = {};
+        for (let i = 0; i < collectionList.length; i++) {
+          collectionAddressAndName[
+            collectionList[i].collectionAddresswerCase()
+          ] = collectionList[i].name;
+        }
+
+        // get all collections of users from confluxscan
+        const res = await axios.get(
+          `https://evmapi.confluxscan.net/nft/balances?owner=${address}`
+        );
+        console.log("res", res.data.result.list);
+        let userCollections = res.data.result.list;
+        let relevantCollections = [];
+        // see if collection.contract is in collectionAddress
+
+        for (let i = 0; i < userCollections.length; i++) {
+          if (
+            collectionAddress.includes(
+              userCollections[i].contract?.toLowerCase()
+            )
+          ) {
+            relevantCollections.push(userCollections[i]);
+          }
+        }
+
+        console.log("relevantCollections", relevantCollections);
+        // now get all nfts of relevantCollections using conflux api
+        let nfts = [];
+        for (let i = 0; i < relevantCollections.length; i++) {
+          const res = await axios.get(
+            `https://evmapi.confluxscan.net/nft/tokens?contract=${relevantCollections[i].contract}&owner=${address}&sort=DESC&sortField=latest_update_time&cursor=0&skip=0&limit=10&withBrief=false&withMetadata=false`
+          );
+          console.log("res", res.data.result.list);
+          nfts = [...nfts, ...res.data.result.list];
+        }
+
+        console.log("nfts", nfts);
+
+        // go over nfts and add image to them according to collectionAddressAndImages
+        for (let i = 0; i < nfts.length; i++) {
+          nfts[i].image =
+            collectionAddressAndImages[nfts[i].contract?.toLowerCase()];
+          nfts[i].name =
+            collectionAddressAndName[nfts[i].contract?.toLowerCase()];
+        }
+
+        setNftsData(nfts);
+        setNftsDataLoading(false);
+      } catch (e) {
+        setNftsDataLoading(false);
+        console.log(e);
+      }
+    })();
+  }, []);
 
   return (
     <>
@@ -52,8 +113,12 @@ const creator = () => {
         />
       </Head>
       <div className="px-4 py-6 lg:px-[75px] lg:py-[120px]">
-        <div className="w-full h-[300px] bg-[#16192A] border-[2px] border-[#2E3150] rounded-[10px] flex justify-center items-end">
-          <div className="relative top-[100px] text-center">
+        <div className="w-full h-[300px] lg:mt-0 mt-20 bg-[#16192A] border-[2px] relative border-[#2E3150] rounded-[10px] flex justify-center items-end">
+          <h1 className="text-3xl font-extrabold absolute top-12">
+            Available NFT's To List
+          </h1>
+
+          <div className="relative  text-center">
             <Image
               src={creatorImage}
               alt="Nitee marketplace"
@@ -64,33 +129,31 @@ const creator = () => {
             <h1 className="text-textLight font-extrabold text-[22px]">
               {address && address.slice(0, 5) + "..." + address.slice(-4)}
             </h1>
-            <p className="text-[#989898] text-lg font-semibold">@laural123</p>
           </div>
         </div>
         <div className="mt-[120px] md:mt-[250px] grid md:grid-cols-3 min-[1380px]:grid-cols-4 gap-4 ">
-          {collectionData.map((item) => (
+          {nftsData.map((item) => (
             <div
               className="cursor-pointer"
               onClick={() =>
                 router.push({
                   pathname: "/create",
-                  query: { colectionAddr: item.collectionAddress },
+                  query: {
+                    colectionAddr: item.contract,
+                    tokenID: item.tokenId,
+                  },
                 })
               }
             >
               <NftCard
                 key={item.id}
-                name={item.name}
-                price={item.nfts.length}
-                symbol={"listings"}
+                name={`${item.name}`}
+                price={`#${item.tokenId}`}
                 user={
-                  item.collectionAddress.slice(0, 5) +
-                  "..." +
-                  item.collectionAddress.slice(-4)
+                  item.contract.slice(0, 5) + "..." + item.contract.slice(-4)
                 }
                 image={item.image}
-                onClick={() => {}}
-                type="List NFTs"
+                type="List NFT"
               />
             </div>
           ))}
