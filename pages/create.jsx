@@ -85,7 +85,7 @@ const Create = () => {
         const querySnapshot = await getDocs(q1);
 
         querySnapshot.forEach((doc) => {
-          alreadyListed = true;
+          if (!doc.data().soldAt) alreadyListed = true;
         });
 
         if (alreadyListed) {
@@ -171,7 +171,7 @@ const Create = () => {
         const querySnapshot = await getDocs(q1);
 
         querySnapshot.forEach((doc) => {
-          alreadyListed = true;
+          if (!doc.data().soldAt) alreadyListed = true;
         });
 
         if (alreadyListed) {
