@@ -68,7 +68,7 @@ const Create = () => {
           // address of the currency contract that will be used to pay for the listing
           currencyContractAddress: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
           // how much the asset will be sold for
-          buyoutPricePerToken: +directPrice,
+          buyoutPricePerToken: directPrice,
         };
 
         console.log("listing", listing);
@@ -129,10 +129,9 @@ const Create = () => {
         querySnapshot1.forEach(async (doc) => {
           const docRef = doc.ref;
           const docData = doc.data();
-          const nfts = docData.nfts;
-          nfts.push(tokenId.toString());
+          const listingCount = docData?.listingCount || 0;
           await updateDoc(docRef, {
-            nfts: nfts,
+            listingCount: listingCount + 1,
           });
         });
         setStartLoading(false);
@@ -153,9 +152,9 @@ const Create = () => {
           // address of the currency contract that will be used to pay for the listing
           currencyContractAddress: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
           // how much people would have to bid to instantly buy the asset
-          buyoutPricePerToken: +buyoutPrice,
+          buyoutPricePerToken: buyoutPrice,
           // the minimum bid that will be accepted for the token
-          reservePricePerToken: +reservePrice,
+          reservePricePerToken: reservePrice,
         };
         console.log("auction list called", auction);
         //get collection with collection address
@@ -215,12 +214,12 @@ const Create = () => {
         querySnapshot1.forEach(async (doc) => {
           const docRef = doc.ref;
           const docData = doc.data();
-          const nfts = docData.nfts;
-          nfts.push(tokenId.toString());
+          const listingCount = docData?.listingCount || 0;
           await updateDoc(docRef, {
-            nfts: nfts,
+            listingCount: listingCount + 1,
           });
         });
+
         setStartLoading(false);
         router.push("/");
       }
