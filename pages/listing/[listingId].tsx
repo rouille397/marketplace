@@ -42,7 +42,7 @@ const ListingPage: NextPage = () => {
       // get listing data from firebase
       const q = query(
         collection(db, "nfts"),
-        where("listingId", "==", listingId)
+        where("listingId", "==", +listingId)
       );
       const querySnapshot = await getDocs(q);
       querySnapshot.forEach((doc) => {
@@ -102,7 +102,7 @@ const ListingPage: NextPage = () => {
 
       const q = query(
         collection(db, "nfts"),
-        where("listingId", "==", listingId)
+        where("listingId", "==", +listingId)
       );
 
       const querySnapshot = await getDocs(q);
@@ -154,7 +154,7 @@ const ListingPage: NextPage = () => {
         // delete data from firebase
         const q = query(
           collection(db, "nfts"),
-          where("listingId", "==", listingId)
+          where("listingId", "==", +listingId)
         );
         // get doc id
 
@@ -194,7 +194,7 @@ const ListingPage: NextPage = () => {
         // delete data from firebase
         const q = query(
           collection(db, "nfts"),
-          where("listingId", "==", listingId)
+          where("listingId", "==", +listingId)
         );
         // get doc id
 
@@ -316,7 +316,7 @@ const ListingPage: NextPage = () => {
       // remove nft from firebase
       const q = query(
         collection(db, "nfts"),
-        where("listingId", "==", listingId)
+        where("listingId", "==", +listingId)
       );
       const querySnapshot = await getDocs(q);
       querySnapshot.forEach(async (doc) => {
@@ -358,7 +358,7 @@ const ListingPage: NextPage = () => {
       // add soldAt to firebase
       const q = query(
         collection(db, "nfts"),
-        where("listingId", "==", listingId)
+        where("listingId", "==", +listingId)
       );
       const querySnapshot = await getDocs(q);
       querySnapshot.forEach(async (doc) => {
