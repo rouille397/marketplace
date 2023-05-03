@@ -117,6 +117,7 @@ const ListingPage: NextPage = () => {
 
       const q2 = query(
         collection(db, "collections"),
+        where("collectionAddress", "==", listing.assetContractAddress),
         where("nfts", "array-contains", listing.asset.id)
       );
       const querySnapshot2 = await getDocs(q2);
@@ -167,6 +168,7 @@ const ListingPage: NextPage = () => {
 
         const q2 = query(
           collection(db, "collections"),
+          where("collectionAddress", "==", listing.assetContractAddress),
           where("nfts", "array-contains", listing.asset.id)
         );
         const querySnapshot2 = await getDocs(q2);
@@ -207,6 +209,7 @@ const ListingPage: NextPage = () => {
 
         const q2 = query(
           collection(db, "collections"),
+          where("collectionAddress", "==", listing.assetContractAddress),
           where("nfts", "array-contains", listing.asset.id)
         );
         const querySnapshot2 = await getDocs(q2);
@@ -326,6 +329,7 @@ const ListingPage: NextPage = () => {
 
       const q2 = query(
         collection(db, "collections"),
+        where("collectionAddress", "==", listing.assetContractAddress),
         where("nfts", "array-contains", listing.asset.id)
       );
       const querySnapshot2 = await getDocs(q2);
