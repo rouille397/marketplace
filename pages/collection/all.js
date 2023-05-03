@@ -97,7 +97,7 @@ const All = () => {
                           {collection.name}
                         </p>
                         <p className="text-white md:text-[18px] text-sm font-semibold">
-                          {collection.nfts.length} Listings
+                          {collection.listingCount} Listings
                         </p>
                       </div>
                     </div>
