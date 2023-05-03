@@ -32,15 +32,11 @@ export default function Home() {
   const [allCollectionsData, setAllCollectionsData] = useState<any>([]);
 
   //recently listed
-  useEffect(() => {
+   useEffect(() => {
     (async () => {
       setRecentlyAddedLoading(true);
       const nftsRef = collection(db, "nfts");
-      const q = query(
-        nftsRef,
-        orderBy("buyoutPricePerToken", "asc"),
-        limit(20)
-      );
+      const q = query(nftsRef, orderBy("listingId", "desc"), limit(20));
       const querySnapshot = await getDocs(q);
       const nfts = querySnapshot.docs.map((doc) => doc.data());
       console.log("nftsss", nfts);
