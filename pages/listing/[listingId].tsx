@@ -117,19 +117,13 @@ const ListingPage: NextPage = () => {
 
       const q2 = query(
         collection(db, "collections"),
-        where("collectionAddress", "==", listing.assetContractAddress),
-        where("nfts", "array-contains", listing.asset.id)
+        where("collectionAddress", "==", listing.assetContractAddress)
       );
       const querySnapshot2 = await getDocs(q2);
       querySnapshot2.forEach(async (doc) => {
         const data = doc.data();
-        const nfts = data.nfts;
-        const index = nfts.indexOf(listing.asset.id);
-        if (index > -1) {
-          nfts.splice(index, 1);
-        }
         await updateDoc(doc.ref, {
-          nfts: nfts,
+          listingCount: data.listingCount - 1,
         });
       });
 
@@ -168,19 +162,13 @@ const ListingPage: NextPage = () => {
 
         const q2 = query(
           collection(db, "collections"),
-          where("collectionAddress", "==", listing.assetContractAddress),
-          where("nfts", "array-contains", listing.asset.id)
+          where("collectionAddress", "==", listing.assetContractAddress)
         );
         const querySnapshot2 = await getDocs(q2);
         querySnapshot2.forEach(async (doc) => {
           const data = doc.data();
-          const nfts = data.nfts;
-          const index = nfts.indexOf(listing.asset.id);
-          if (index > -1) {
-            nfts.splice(index, 1);
-          }
           await updateDoc(doc.ref, {
-            nfts: nfts,
+            listingCount: data.listingCount - 1,
           });
         });
         alert("Listing cancelled successfully!");
@@ -209,20 +197,13 @@ const ListingPage: NextPage = () => {
 
         const q2 = query(
           collection(db, "collections"),
-          where("collectionAddress", "==", listing.assetContractAddress),
-          where("nfts", "array-contains", listing.asset.id)
+          where("collectionAddress", "==", listing.assetContractAddress)
         );
         const querySnapshot2 = await getDocs(q2);
         querySnapshot2.forEach(async (doc) => {
           const data = doc.data();
-
-          const nfts = data.nfts;
-          const index = nfts.indexOf(listing.asset.id);
-          if (index > -1) {
-            nfts.splice(index, 1);
-          }
           await updateDoc(doc.ref, {
-            nfts: nfts,
+            listingCount: data.listingCount - 1,
           });
         });
 
@@ -329,20 +310,13 @@ const ListingPage: NextPage = () => {
 
       const q2 = query(
         collection(db, "collections"),
-        where("collectionAddress", "==", listing.assetContractAddress),
-        where("nfts", "array-contains", listing.asset.id)
+        where("collectionAddress", "==", listing.assetContractAddress)
       );
       const querySnapshot2 = await getDocs(q2);
       querySnapshot2.forEach(async (doc) => {
         const data = doc.data();
-
-        const nfts = data.nfts;
-        const index = nfts.indexOf(listing.asset.id);
-        if (index > -1) {
-          nfts.splice(index, 1);
-        }
         await updateDoc(doc.ref, {
-          nfts: nfts,
+          listingCount: data.listingCount - 1,
         });
       });
       alert("Transfer successful!");
