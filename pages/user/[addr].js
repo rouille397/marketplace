@@ -1,5 +1,6 @@
-import { useAddress } from "@thirdweb-dev/react";
+import { useAddress, useSigner } from "@thirdweb-dev/react";
 import axios from "axios";
+import { ethers } from "ethers";
 import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
 import Head from "next/head";
 import Image from "next/image";
@@ -12,13 +13,17 @@ import creatorImage from "../../public/images/creator-image.png";
 const creator = () => {
   const [nftsData, setNftsData] = useState([]);
   const [nftsDataLoading, setNftsDataLoading] = useState(true);
+  const [startLoading, setStartLoading] = useState(false);
   const router = useRouter();
   const address = useAddress();
-
+  const signer = useSigner();
+  const provider = signer?.provider;
   useEffect(() => {
     // get all collections from firebase and then make array of collectionAddress
     (async () => {
+      if (!provider) return;
       try {
+        setStartLoading(true);
         setNftsDataLoading(true);
         const collectionRef = collection(db, "collections");
         const collectionSnapshot = await getDocs(collectionRef);
@@ -70,33 +75,79 @@ const creator = () => {
 
         console.log("relevantCollections", relevantCollections);
         // now get all nfts of relevantCollections using conflux api
-        let nfts = [];
+
+        let nftPromises = [];
         for (let i = 0; i < relevantCollections.length; i++) {
-          const res = await axios.get(
-            `https://evmapi.confluxscan.net/nft/tokens?contract=${relevantCollections[i].contract}&owner=${address}&sort=DESC&sortField=latest_update_time&cursor=0&skip=0&limit=10&withBrief=false&withMetadata=false`
+          nftPromises.push(
+            axios.get(
+              `https://evmapi.confluxscan.net/nft/tokens?contract=${relevantCollections[i].contract}&owner=${address}&sort=DESC&sortField=latest_update_time&cursor=0&skip=0&limit=10&withBrief=false&withMetadata=false`
+            )
           );
-          console.log("before list 2");
-          nfts = [...nfts, ...res.data.result?.list];
         }
 
-        console.log("nfts", nfts);
+        let nftPromisesRes = await Promise.all(nftPromises);
+        console.log("nftPromisesRes", nftPromisesRes);
 
-        // go over nfts and add image to them according to collectionAddressAndImages
+        let nfts = [];
+        for (let i = 0; i < nftPromisesRes.length; i++) {
+          nfts = [...nfts, ...nftPromisesRes[i].data.result?.list];
+        }
+        // create contract instance for each nft and get name and image by calling contract uri
+        let tokenUriPromises = [];
         for (let i = 0; i < nfts.length; i++) {
-          nfts[i].image =
-            collectionAddressAndImages[nfts[i].contract?.toLowerCase()];
-          nfts[i].name =
-            collectionAddressAndName[nfts[i].contract?.toLowerCase()];
-        }
+          const contract = new ethers.Contract(
+            nfts[i].contract,
+            [
+              {
+                inputs: [
+                  { internalType: "uint256", name: "tokenId", type: "uint256" },
+                ],
+                name: "tokenURI",
+                outputs: [{ internalType: "string", name: "", type: "string" }],
+                stateMutability: "view",
+                type: "function",
+              },
+            ],
+            provider
+          );
 
+          tokenUriPromises.push(contract.tokenURI(nfts[i].tokenId));
+          // const res = await axios.get(uri);
+          // nfts[i].image = res.data.image;
+        }
+        let ipfsLinks = await Promise.all(tokenUriPromises);
+        console.log("ipfsLinks", ipfsLinks);
+        let ipfsPromises = [];
+        let linkFormatted = "";
+        for (let i = 0; i < ipfsLinks.length; i++) {
+          linkFormatted = ipfsLinks[i].replace(
+            "ipfs://",
+            "https://ipfs.io/ipfs/"
+          );
+          console.log("linkFormatted", linkFormatted);
+          ipfsPromises.push(axios.get(linkFormatted));
+        }
+        let ipfsPromisesRes = await Promise.all(ipfsPromises);
+        console.log("ipfsPromisesRes", ipfsPromisesRes);
+        let formattedImageLink = "";
+        for (let i = 0; i < ipfsPromisesRes.length; i++) {
+          formattedImageLink = ipfsPromisesRes[i].data.image.replace(
+            "ipfs://",
+            "https://ipfs.io/ipfs/"
+          );
+          nfts[i].image = formattedImageLink;
+          nfts[i].name = ipfsPromisesRes[i].data.name;
+        }
         setNftsData(nfts);
         setNftsDataLoading(false);
+        setStartLoading(false);
       } catch (e) {
         setNftsDataLoading(false);
+        setStartLoading(false);
         console.log(e);
       }
     })();
-  }, []);
+  }, [provider]);
 
   return (
     <>
@@ -134,6 +185,7 @@ const creator = () => {
         <div className="mt-[120px] md:mt-[250px] grid md:grid-cols-3 min-[1380px]:grid-cols-4 gap-4 ">
           {nftsData.map((item) => (
             <div
+              key={Math.random().toString()}
               className="cursor-pointer"
               onClick={() =>
                 router.push({
@@ -159,6 +211,11 @@ const creator = () => {
           ))}
         </div>
       </div>
+      {startLoading && (
+        <div className="fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-50 flex justify-center items-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-white"></div>
+        </div>
+      )}
     </>
   );
 };
