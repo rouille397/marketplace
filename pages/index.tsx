@@ -204,7 +204,7 @@ export default function Home() {
           )}
           {/* TODO change it */}
           {!allCollectionLoading && allCollectionsData.length > 3 && (
-            <div className="text-center mt-12">
+            <div className="text-center 2xl:mt-[500px]  xl:mt-60 lg:mt-40  mt-12">
               <Link href="/collection/all">
                 <Button type="rounded">View More</Button>
               </Link>
