@@ -59,7 +59,7 @@ const New = () => {
         creator: address?.toLowerCase(),
         createdAt: new Date().getTime(),
         collectionAddress: collectionAddress?.toLowerCase(),
-        nfts: [],
+        listingCount: 0,
       };
       console.log(payload);
       const docRef = await addDoc(collectionRef, payload);
