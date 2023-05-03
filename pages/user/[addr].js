@@ -59,7 +59,7 @@ const creator = () => {
           `https://evmapi.confluxscan.net/nft/balances?owner=${address}`
         );
         console.log("before list");
-        let userCollections = res.data.result?.list;
+        let userCollections = res.data.result?.list || [];
         let relevantCollections = [];
         // see if collection.contract is in collectionAddress
 
