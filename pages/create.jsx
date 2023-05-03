@@ -115,7 +115,7 @@ const Create = () => {
           name: listingData.asset.name,
           image: listingData.asset.image,
           seller: address,
-          listingId: listingId.toString(),
+          listingId: +listingId.toString(),
           type: "direct",
         });
         // add token id to nfts array inside collection
@@ -201,7 +201,7 @@ const Create = () => {
           name: listingData.asset.name,
           image: listingData.asset.image,
           seller: address,
-          listingId: listingId.toString(),
+          listingId: +listingId.toString(),
           type: "auction",
         });
         // add token id to nfts array inside collection
