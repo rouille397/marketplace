@@ -11,17 +11,12 @@ import { ADMIN } from "@/addresses";
 const SlideDownMenu = ({ menu, callback }) => {
   const { route } = useRouter();
   const address = useAddress();
-  let linksToShow = [];
-  menu.forEach((e) => {
-    if (
-      address.toLowerCase() !== ADMIN.toLowerCase() &&
-      e.name !== "Post Collection"
-    ) {
-      linksToShow.push(e);
-    } else if (address.toLowerCase() == ADMIN.toLowerCase()) {
-      linksToShow.push(e);
-    }
-  });
+  let linksToShow = [{ name: "Home", link: "/" }];
+
+  if (address && address?.toLowerCase() == ADMIN?.toLowerCase()) {
+    linksToShow.push({ name: "Post Collection", link: "/collection/new" });
+  }
+
   return (
     <div className={`${styles.menu} bg-night`}>
       <div className={styles.crossIcon}>
@@ -48,13 +43,15 @@ const SlideDownMenu = ({ menu, callback }) => {
             {item.name}
           </Link>
         ))}
-        <Link
-          href={`/user/${address?.toLowerCase()}`}
-          onClick={() => callback && callback(false)}
-          className={`${styles.menuLink} ${"text-gradient-secondary"} `}
-        >
-          Profile
-        </Link>
+        {address && (
+          <Link
+            href={`/user/${address?.toLowerCase()}`}
+            onClick={() => callback && callback(false)}
+            className={`${styles.menuLink} ${"text-gradient-secondary"} `}
+          >
+            Profile
+          </Link>
+        )}
       </div>
       <Footer />
     </div>
