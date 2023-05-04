@@ -27,6 +27,7 @@ const ListingPage: NextPage = () => {
   const [winningBid, setWinningBid] = useState<any>(null);
   const [secondsTillEnd, setSecondsTillEnd] = useState<any>(null);
   const [winnerAddress, setWinnerAddress] = useState("");
+  const [swappiData, setSwappiData] = useState<any>(null);
   const [alreadySold, setAlreadySold] = useState(0);
   const router = useRouter();
   const address = useAddress();
@@ -47,6 +48,13 @@ const ListingPage: NextPage = () => {
       const querySnapshot = await getDocs(q);
       querySnapshot.forEach((doc) => {
         const data = doc.data();
+        if (
+          data.assetContractAddress.toLowerCase() ==
+          "0xbbdba5043a73e87533b9378e58dea577a872dc04"
+        ) {
+          setSwappiData(data);
+          console.log(data, "swappiData");
+        }
         if (data.soldAt) {
           setAlreadySold(data.soldAt);
         }
@@ -435,7 +443,7 @@ const ListingPage: NextPage = () => {
       <div className={styles.listingContainer}>
         <div className={styles.leftListing}>
           <MediaRenderer
-            src={listing.asset.image}
+            src={swappiData ? swappiData.image : listing.asset.image}
             className="w-[552px] h-auto max-w-full"
             width="552"
             height="552"
@@ -445,7 +453,7 @@ const ListingPage: NextPage = () => {
         <div className={styles.rightListing}>
           <div className="flex md:justify-between justify-center w-full">
             <h1 className="font-extrabold md:text-[48px] text-[32px] leading-[58px] tracking-wide mb-4">
-              {listing.asset.name}
+              {swappiData ? swappiData.name : listing.asset.name}
             </h1>
             {listing.type == 1 && (
               <>
