@@ -15,6 +15,7 @@ import {
 import { db } from "../helpers/firebase-config";
 import { useEffect } from "react";
 import axios from "axios";
+import { ethers } from "ethers";
 
 // useActiveChain, useSwitchChain, useChainId
 
@@ -34,6 +35,7 @@ const Create = () => {
   const addr = useAddress();
   const signer = useSigner();
   const address = addr?.toLowerCase();
+  const provider = signer.provider;
 
   const { contract } = useContract(MarketplaceAddr, "marketplace");
 
@@ -107,18 +109,57 @@ const Create = () => {
         let listingData = await contract.direct.getListing(listingId);
 
         console.log("listingDataaa", listingData);
+        let litstingName = listingData?.asset?.name || "";
+        let listingImage = listingData?.asset?.image || "";
+
+        if (
+          colectionAddr?.toLowerCase() ==
+          "0xbbdba5043a73e87533b9378e58dea577a872dc04"
+        ) {
+          console.log("swappi calling");
+          const contract = new ethers.Contract(
+            colectionAddr?.toLowerCase(),
+            [
+              {
+                inputs: [
+                  { internalType: "uint256", name: "tokenId", type: "uint256" },
+                ],
+                name: "tokenURI",
+                outputs: [{ internalType: "string", name: "", type: "string" }],
+                stateMutability: "view",
+                type: "function",
+              },
+            ],
+            provider
+          );
+          const tokenData = await contract.tokenURI(tokenId);
+          console.log("tokenData", tokenData);
+          let metadata = await axios.get("/api/swappi", {
+            params: { uri: tokenData },
+          });
+          console.log("result dawtaaa", metadata.data.data);
+          litstingName = metadata.data.data.name;
+          listingImage = metadata.data.data.image;
+        }
 
         // add listing to firebase
-
-        const docRef = await addDoc(collection(db, "nfts"), {
+        console.log("going to add this to firebase", {
           ...listing,
-          name: listingData.asset.name,
-          image: listingData.asset.image,
+          name: litstingName,
+          image: listingImage,
           seller: address,
           listingId: +listingId.toString(),
           type: "direct",
         });
-        // add token id to nfts array inside collection
+
+        const docRef = await addDoc(collection(db, "nfts"), {
+          ...listing,
+          name: litstingName,
+          image: listingImage,
+          seller: address,
+          listingId: +listingId.toString(),
+          type: "direct",
+        });
 
         const q = query(
           collection(db, "collections"),
@@ -193,17 +234,50 @@ const Create = () => {
         const listingData = await contract.auction.getListing(listingId);
         console.log("listingData", listingData);
 
+        console.log("listingDataaa", listingData);
+        let litstingName = listingData?.asset?.name || "";
+        let listingImage = listingData?.asset?.image || "";
+
+        if (
+          colectionAddr?.toLowerCase() ==
+          "0xbbdba5043a73e87533b9378e58dea577a872dc04"
+        ) {
+          console.log("swappi calling");
+          const contract = new ethers.Contract(
+            colectionAddr?.toLowerCase(),
+            [
+              {
+                inputs: [
+                  { internalType: "uint256", name: "tokenId", type: "uint256" },
+                ],
+                name: "tokenURI",
+                outputs: [{ internalType: "string", name: "", type: "string" }],
+                stateMutability: "view",
+                type: "function",
+              },
+            ],
+            provider
+          );
+          const tokenData = await contract.tokenURI(tokenId);
+          console.log("tokenData", tokenData);
+          let metadata = await axios.get("/api/swappi", {
+            params: { uri: tokenData },
+          });
+          console.log("result dawtaaa", metadata.data.data);
+          litstingName = metadata.data.data.name;
+          listingImage = metadata.data.data.image;
+        }
+
         // add listing to firebase
 
         const docRef = await addDoc(collection(db, "nfts"), {
           ...auction,
-          name: listingData.asset.name,
-          image: listingData.asset.image,
+          name: litstingName,
+          image: listingImage,
           seller: address,
           listingId: +listingId.toString(),
           type: "auction",
         });
-        // add token id to nfts array inside collection
 
         const q = query(
           collection(db, "collections"),
