@@ -20,7 +20,9 @@ const Collection = () => {
       const collectionRef = collection(db, "collections");
       const q = query(
         collectionRef,
-        where("collectionAddress", "==", collectionId?.toLowerCase())
+        where("collectionAddress", "==", collectionId?.toLowerCase()),
+        orderBy("buyoutPricePerToken", "asc")
+
       );
       const collectionSnapshot = await getDocs(q);
       const collectionData = collectionSnapshot.docs.map((doc) => ({
