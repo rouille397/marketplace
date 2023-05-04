@@ -125,13 +125,17 @@ const ListingPage: NextPage = () => {
 
       const q2 = query(
         collection(db, "collections"),
-        where("collectionAddress", "==", listing.assetContractAddress)
+        where(
+          "collectionAddress",
+          "==",
+          listing?.assetContractAddress?.toLowerCase()
+        )
       );
       const querySnapshot2 = await getDocs(q2);
       querySnapshot2.forEach(async (doc) => {
         const data = doc.data();
         await updateDoc(doc.ref, {
-          listingCount: data.listingCount - 1,
+          listingCount: data?.listingCount - 1,
         });
       });
 
@@ -170,7 +174,11 @@ const ListingPage: NextPage = () => {
 
         const q2 = query(
           collection(db, "collections"),
-          where("collectionAddress", "==", listing.assetContractAddress)
+          where(
+            "collectionAddress",
+            "==",
+            listing?.assetContractAddress?.toLowerCase()
+          )
         );
         const querySnapshot2 = await getDocs(q2);
         querySnapshot2.forEach(async (doc) => {
@@ -205,13 +213,17 @@ const ListingPage: NextPage = () => {
 
         const q2 = query(
           collection(db, "collections"),
-          where("collectionAddress", "==", listing.assetContractAddress)
+          where(
+            "collectionAddress",
+            "==",
+            listing?.assetContractAddress?.toLowerCase()
+          )
         );
         const querySnapshot2 = await getDocs(q2);
         querySnapshot2.forEach(async (doc) => {
           const data = doc.data();
           await updateDoc(doc.ref, {
-            listingCount: data.listingCount - 1,
+            listingCount: data?.listingCount - 1,
           });
         });
 
@@ -318,7 +330,11 @@ const ListingPage: NextPage = () => {
 
       const q2 = query(
         collection(db, "collections"),
-        where("collectionAddress", "==", listing.assetContractAddress)
+        where(
+          "collectionAddress",
+          "==",
+          listing?.assetContractAddress?.toLowerCase()
+        )
       );
       const querySnapshot2 = await getDocs(q2);
       querySnapshot2.forEach(async (doc) => {
