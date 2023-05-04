@@ -355,8 +355,10 @@ const ListingPage: NextPage = () => {
 
   const transferToBuyerHandler = async () => {
     try {
-      await contract.auction.closeListing(listingId, winnerAddress);
+      const tx = await contract.auction.closeListing(listingId, winnerAddress);
+
       console.log("NFT sold successfuly");
+
       // add soldAt to firebase
       const q = query(
         collection(db, "nfts"),
@@ -366,6 +368,7 @@ const ListingPage: NextPage = () => {
       querySnapshot.forEach(async (doc) => {
         await updateDoc(doc.ref, {
           soldAt: new Date().getTime(),
+          buyer: winnerAddress,
         });
       });
       router.push("/");
