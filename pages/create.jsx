@@ -35,7 +35,7 @@ const Create = () => {
   const addr = useAddress();
   const signer = useSigner();
   const address = addr?.toLowerCase();
-  const provider = signer.provider;
+  const provider = signer?.provider;
 
   const { contract } = useContract(MarketplaceAddr, "marketplace");
 
