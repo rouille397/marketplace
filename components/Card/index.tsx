@@ -24,13 +24,19 @@ const Card: FC<ICardProps> = ({
   listerId,
   soldOut,
 }) => {
+  // if image is video, render video
+  let isVideo = false;
+
+  if (image?.includes("mp4")) {
+    isVideo = true;
+  }
   return (
     <div
       className="w-full h-[455px] md:w-[280px] lg:h-[550px]"
       onClick={onClick}
     >
       <div className="">
-        {1 && (
+        {!isVideo ? (
           <img
             src={
               image ||
@@ -39,6 +45,16 @@ const Card: FC<ICardProps> = ({
             alt=""
             className="w-full md:w-[280px] h-[370px] rounded-[20px] object-cover"
           />
+        ) : (
+          image && (
+            <video
+              src={image}
+              className="w-[280px] h-[370px] rounded-[14px] object-cover"
+              autoPlay
+              loop
+              muted
+            />
+          )
         )}
       </div>
       <div className="flex justify-center relative bottom-[75px]">
