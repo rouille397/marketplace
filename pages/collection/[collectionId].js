@@ -20,9 +20,7 @@ const Collection = () => {
       const collectionRef = collection(db, "collections");
       const q = query(
         collectionRef,
-        where("collectionAddress", "==", collectionId?.toLowerCase()),
-        orderBy("buyoutPricePerToken", "asc")
-
+        where("collectionAddress", "==", collectionId?.toLowerCase())
       );
       const collectionSnapshot = await getDocs(q);
       const collectionData = collectionSnapshot.docs.map((doc) => ({
@@ -46,7 +44,7 @@ const Collection = () => {
         where("assetContractAddress", "==", collectionId?.toLowerCase()),
         orderBy("buyoutPricePerToken", "asc")
       );
-      console.log("q", q);
+      console.log("qqqq", q);
       const nftsSnapshot = await getDocs(q);
       const nftsData = nftsSnapshot.docs.map((doc) => ({
         id: doc.id,
@@ -54,6 +52,7 @@ const Collection = () => {
       }));
       console.log("nftsData", nftsData);
       const availableNftsData = nftsData.filter((item) => !item.soldAt);
+      console.log("availableNftsData", availableNftsData);
       setNftsList(availableNftsData);
     })();
   }, [collectionId]);
