@@ -23,16 +23,26 @@ const NftCard: FC<INftCardProps> = ({
   type,
   sold,
 }) => {
+  const isVideo = image?.includes("mp4");
   return (
     <div
       className="nft-card flex flex-shrink-0 flex-grow-0 basis-[300px] md:flex-shrink-[auto] md:flex-grow-[auto] md:basis-[auto] flex-col items-center gap-[27px] px-[10px] py-[15px]  w-[297px] h-[425px] rounded-[20px] bg-[#FFFFFF1A] lg:mb-11"
       onClick={onClick}
     >
-      {name && (
+      {image && !isVideo ? (
         <img
           src={image}
           alt={""}
           className="w-[276px] h-[307px] rounded-[14px] object-cover"
+        />
+      ) : (
+        //  render a video
+        <video
+          src={image}
+          className="w-[276px] h-[307px] rounded-[14px] object-cover"
+          autoPlay
+          loop
+          muted
         />
       )}
       <div className="w-full">
@@ -44,14 +54,18 @@ const NftCard: FC<INftCardProps> = ({
         </div>
         <p className="text-xs font-normal text-white">{user}</p>
       </div>
-      {sold ? (
-        <Button className="hidden text-[19px] font-medium text-white rounded-xl w-full py-4  collect-button">
-          Sold Out
-        </Button>
-      ) : (
-        <Button className="hidden text-[19px] font-medium text-white rounded-xl w-full py-4  collect-button">
-          {type ? "List NFT" : "Collect Now"}
-        </Button>
+      {!isVideo && (
+        <>
+          {sold ? (
+            <Button className="hidden text-[19px] font-medium text-white rounded-xl w-full py-4  collect-button">
+              Sold Out
+            </Button>
+          ) : (
+            <Button className="hidden text-[19px] font-medium text-white rounded-xl w-full py-4  collect-button">
+              {type ? "List NFT" : "Collect Now"}
+            </Button>
+          )}
+        </>
       )}
     </div>
   );
