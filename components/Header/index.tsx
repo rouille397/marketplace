@@ -73,7 +73,9 @@ const Header = () => {
       <div className="hidden lg:flex  justify-center items-end lg:bg-[url('/images/header-bg-img.png')] bg-cover  min-[1440px]:bg-cover bg-top bg-no-repeat  w-full h-[884px] xl:h-[884px]  relative">
         <Image src={handImage} alt="nitee conflux espace" className="relative z-[1]" />
         <h1 className="nitfee-text uppercase text-[200px] font-bold absolute top-[18%] ">NITFEE</h1>
-        <h1 className="conflux-text text-[180px] font-bold absolute z-[2] top-[45%]"></h1>
+        <h1 className="conflux-text text-[180px] font-bold absolute z-[2] top-[45%]">
+          Conflux Espace
+        </h1>
         <div className="absolute z-[2] top-[75%] flex justify-center">
           <h2 className="font-semibold text-[27px] text-white w-[1026px]">
             Explore rare and valuable digital assets on our NFT marketplace. Buy, sell, and earn

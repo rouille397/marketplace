@@ -34,28 +34,31 @@ select {
   --font-nunito: ;
 }
 
-.walletConnectButton {
+.walletConnectButton,
+.stake-btn {
   background: linear-gradient(272.64deg, #ff8d8d 0.86%, #7d12e7 68.2%);
 }
 
-.nitfee-text {
-  background: linear-gradient(
-    180deg,
-    #ffffff 18.62%,
-    rgba(255, 255, 255, 0) 100%
-  );
+.nitfee-text,
+.stake-text {
+  background: linear-gradient(180deg, #ffffff 18.62%, rgba(255, 255, 255, 0) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   font-family: "Advent Pro", sans-serif;
+}
+.nitfee-text {
   transform: translate(-46%, 0);
 }
-.conflux-text {
+.conflux-text,
+.nft-text {
   background: linear-gradient(272.64deg, #ff8d8d 0.86%, #7d12e7 68.2%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   font-family: "Advent Pro", sans-serif;
+}
+.conflux-text {
   transform: translate(0%, 15px);
 }
 .nft-card:hover {
@@ -181,11 +184,7 @@ select {
   transform: translate(0, 0);
 }
 .nitfee-text-sm {
-  background: linear-gradient(
-    180deg,
-    #ffffff 18.62%,
-    rgba(255, 255, 255, 0) 100%
-  );
+  background: linear-gradient(180deg, #ffffff 18.62%, rgba(255, 255, 255, 0) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
