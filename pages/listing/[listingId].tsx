@@ -146,8 +146,11 @@ const ListingPage: NextPage = () => {
 
       alert("NFT bought successfully!");
       router.push("/");
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
+      console.log("errror", error.message);
+      if (error.message.includes("is no longer valid")) {
+        deleteListingHandler();
+      }
       alert(error);
     }
   }
@@ -342,6 +345,7 @@ const ListingPage: NextPage = () => {
           listingCount: data.listingCount - 1,
         });
       });
+      router.push("/");
     } catch (e) {
       console.log("delete error", e);
     }
