@@ -71,22 +71,16 @@ const Header = () => {
   return (
     <Fragment>
       <div className="hidden lg:flex  justify-center items-end lg:bg-[url('/images/header-bg-img.png')] bg-cover  min-[1440px]:bg-cover bg-top bg-no-repeat  w-full h-[884px] xl:h-[884px]  relative">
-        <Image
-          src={handImage}
-          alt="nitee conflux espace"
-          className="relative z-[1]"
-        />
-        <h1 className="nitfee-text uppercase text-[200px] font-bold absolute top-[18%] ">
-          NITFEE
-        </h1>
+        <Image src={handImage} alt="nitee conflux espace" className="relative z-[1]" />
+        <h1 className="nitfee-text uppercase text-[200px] font-bold absolute top-[18%] ">NITFEE</h1>
         <h1 className="conflux-text text-[180px] font-bold absolute z-[2] top-[45%]">
           Conflux Espace
         </h1>
         <div className="absolute z-[2] top-[75%] flex justify-center">
           <h2 className="font-semibold text-[27px] text-white w-[1026px]">
-            Explore rare and valuable digital assets on our NFT marketplace.
-            Buy, sell, and earn rewards with low fees and an easy-to-use
-            platform. Join our community of NFT enthusiasts today.
+            Explore rare and valuable digital assets on our NFT marketplace. Buy, sell, and earn
+            rewards with low fees and an easy-to-use platform. Join our community of NFT enthusiasts
+            today.
           </h2>
         </div>
       </div>
@@ -103,11 +97,7 @@ const Header = () => {
         <h1 className="conflux-text-sm text-[96px] leading-[96px] font-bold absolute top-[22%] break-words text-center">
           Conflux Espace
         </h1>
-        <div
-          className={`z-[1] absolute lg:hidden ${
-            address ? "top-[62%]" : "top-[66%]"
-          }`}
-        >
+        <div className={`z-[1] absolute lg:hidden ${address ? "top-[62%]" : "top-[66%]"}`}>
           <div className="flex gap-6 items-center">
             <a href="https://twitter.com/nitfeemarketCFX" target={"_blank"}>
               <Button
@@ -128,10 +118,7 @@ const Header = () => {
             {address && (
               <Link href={`/user/${address}`}>
                 <p className="font-medium text-white px-6 py-3 rounded-xl border border-[#696969] w-[154px]">
-                  {address
-                    ?.slice(0, 6)
-                    .concat("...")
-                    .concat(address?.slice(-4))}
+                  {address?.slice(0, 6).concat("...").concat(address?.slice(-4))}
                 </p>
               </Link>
             )}
@@ -140,9 +127,9 @@ const Header = () => {
 
         <div className="absolute z-[1] top-[80%] flex justify-center">
           <h2 className="font-semibold text-[20px] text-white w-full text-center">
-            Explore rare and valuable digital assets on our NFT marketplace.
-            Buy, sell, and earn rewards with low fees and an easy-to-use
-            platform. Join our community of NFT enthusiasts today.
+            Explore rare and valuable digital assets on our NFT marketplace. Buy, sell, and earn
+            rewards with low fees and an easy-to-use platform. Join our community of NFT enthusiasts
+            today.
           </h2>
         </div>
       </div>
