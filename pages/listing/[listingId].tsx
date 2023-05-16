@@ -63,10 +63,15 @@ const ListingPage: NextPage = () => {
     getContract();
   }, [sdk]);
 
-  const { data: listing, isLoading: loadingListing } = useListing(
-    contract,
-    listingId
-  );
+  const {
+    data: listing,
+    isLoading: loadingListing,
+    error: listingError,
+  } = useListing(contract, listingId) as any;
+
+  console.log(listing, "listingData");
+  console.log(loadingListing, "loadingListing");
+  console.log(listingError, "listingError");
 
   const [bidAmount, setBidAmount] = useState<string>("");
 
@@ -306,8 +311,51 @@ const ListingPage: NextPage = () => {
     }
   }, [listing]);
 
+  const deleteListingHandler = async () => {
+    console.log("deleteListingHandler", listingId);
+    try {
+      // delete data from firebase
+      const q = query(
+        collection(db, "nfts"),
+        where("listingId", "==", +listingId)
+      );
+      // get doc id
+      let fetchedDocData: any;
+
+      const querySnapshot = await getDocs(q);
+      querySnapshot.forEach(async (doc) => {
+        fetchedDocData = doc.data();
+        await deleteDoc(doc.ref);
+      });
+      const q2 = query(
+        collection(db, "collections"),
+        where(
+          "collectionAddress",
+          "==",
+          fetchedDocData?.assetContractAddress?.toLowerCase()
+        )
+      );
+      const querySnapshot2 = await getDocs(q2);
+      querySnapshot2.forEach(async (doc) => {
+        const data = doc.data();
+        await updateDoc(doc.ref, {
+          listingCount: data.listingCount - 1,
+        });
+      });
+    } catch (e) {
+      console.log("delete error", e);
+    }
+  };
+
   if (loadingListing) {
     return <div className={styles.loadingOrError}>Loading...</div>;
+  }
+
+  if (!listing && listingError) {
+    if (listingError.message.includes("Could not find listing")) {
+      console.log(listingError.message, "listingErrorrr");
+      deleteListingHandler();
+    }
   }
 
   if (!listing) {
@@ -691,14 +739,6 @@ const ListingPage: NextPage = () => {
             </div>
           }
           <div className="h-6 flex justify-end w-full">
-            {console.log(
-              "listing.type",
-              listing.type,
-              `bidAmount`,
-              bidAmount,
-              `minNextBid`,
-              minNextBid
-            )}
             {listing.type == 1 &&
               minNextBid &&
               +bidAmount < +minNextBid &&
