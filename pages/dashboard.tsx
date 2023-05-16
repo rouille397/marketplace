@@ -124,6 +124,7 @@ export default function Dashboard() {
         <div className="flex flex-wrap gap-[70px] justify-center mt-24">
           {Array.from({ length: 3 }).map((_, i) => (
             <NftCard
+              key={i}
               name="Sam"
               price="100CFX"
               symbol={""}
@@ -133,7 +134,6 @@ export default function Dashboard() {
               onClick={function (): void {
                 throw new Error("Function not implemented.");
               }}
-              key={i}
             />
           ))}
         </div>
