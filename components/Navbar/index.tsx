@@ -50,7 +50,6 @@ const Navbar: FC = () => {
     if (window.scrollY >= 60) setColor(true);
     else setColor(false);
   };
-  console.log("correctNetwork", mismatch);
   let walletBtn;
   if (address && !mismatch) {
     walletBtn = (
@@ -131,19 +130,34 @@ const Navbar: FC = () => {
           </Link>
         )}
         {address && (
-          <Link href={`/user/${address}`}>
-            <Button
-              className="uppercase text-base text-white flex gap-2 items-center"
-              type="transparent"
-            >
-              <Image
-                src={userIcon}
-                alt="marketplan nitfee discord"
-                className="w-6 h-6 object-contain"
-              />
-              Profile
-            </Button>
-          </Link>
+          <>
+            <Link href={`/dashboard`}>
+              <Button
+                className="uppercase text-base text-white flex gap-2 items-center"
+                type="transparent"
+              >
+                {/* <Image
+                  src={userIcon}
+                  alt="marketplan nitfee discord"
+                  className="w-6 h-6 object-contain"
+                /> */}
+                Stake
+              </Button>
+            </Link>
+            <Link href={`/user/${address}`}>
+              <Button
+                className="uppercase text-base text-white flex gap-2 items-center"
+                type="transparent"
+              >
+                <Image
+                  src={userIcon}
+                  alt="marketplan nitfee discord"
+                  className="w-6 h-6 object-contain"
+                />
+                Profile
+              </Button>
+            </Link>
+          </>
         )}
         {walletBtn}
       </div>
