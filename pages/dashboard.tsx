@@ -13,20 +13,23 @@ import {
   useContractWrite,
   useOwnedNFTs,
 } from "@thirdweb-dev/react";
+import { GOLD_NFT_ADDRESS, GOLD_STAKING_ADDRESS } from "@/addresses";
 
 const stakeCategories = ["stake", "un-stake", "claim", "un-claimed points"];
 
 export default function Dashboard() {
+  console.log("GOLD_STAKING_ADDRESS", GOLD_STAKING_ADDRESS);
+
   const [selectedType, setSelectedType] = useState<any>(null);
   const address = useAddress();
 
-  const { contract } = useContract("0x148dC0Ed543E2CE3e693c13B71b0Da63467596b6");
+  const { contract } = useContract(GOLD_STAKING_ADDRESS);
   const { mutateAsync: stake, isLoading } = useContractWrite(contract, "stake");
-  const { contract: nftContract } = useContract("0x6b4AC814324544f782eF5bdfdf7fA699D0C6377F");
+  const { contract: nftContract } = useContract(GOLD_NFT_ADDRESS);
   const { data: isAlreadyApproved, isLoading: isApprovedLoading } = useContractRead(
     nftContract,
     "isApprovedForAll",
-    [address, "0x148dC0Ed543E2CE3e693c13B71b0Da63467596b6"],
+    [address, GOLD_STAKING_ADDRESS],
   );
   console.log("isAlreadyApproved", isAlreadyApproved);
   const { mutateAsync: setApprovalForAll } = useContractWrite(nftContract, "setApprovalForAll");
@@ -41,7 +44,7 @@ export default function Dashboard() {
   const approveFOrAll = async () => {
     try {
       const data = await setApprovalForAll({
-        args: ["0x148dC0Ed543E2CE3e693c13B71b0Da63467596b6", true],
+        args: [GOLD_STAKING_ADDRESS, true],
       });
       console.info("contract call successs", data);
     } catch (err) {
@@ -115,6 +118,7 @@ export default function Dashboard() {
             </Button>
           ) : (
             <Button
+              key={index}
               type="rounded"
               className="uppercase w-[168px]"
               onClick={() => {
