@@ -45,6 +45,7 @@ export default function Dashboard() {
         {stakeCategories?.map((category, index) =>
           index === stakeCategories.length - 1 ? (
             <Button
+              key={index}
               type="rounded"
               className="whitespace-nowrap flex items-center gap-4 uppercase"
               onClick={() => {

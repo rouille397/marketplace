@@ -50,7 +50,6 @@ const Navbar: FC = () => {
     if (window.scrollY >= 60) setColor(true);
     else setColor(false);
   };
-  console.log("correctNetwork", mismatch);
   let walletBtn;
   if (address && !mismatch) {
     walletBtn = (
@@ -102,25 +101,17 @@ const Navbar: FC = () => {
             alt="NITFEE"
             className="w-[46px] h-[48px] lg:w-[72px] lg:h-[70px] object-contain"
           />
-          <h1 className="text-2xl text-white lg:text-[32px] font-bold uppercase">
-            NITFEE
-          </h1>
+          <h1 className="text-2xl text-white lg:text-[32px] font-bold uppercase">NITFEE</h1>
         </div>
       </Link>
       {address?.toLowerCase() == ADMIN?.toLowerCase() && (
         <>
           <div className="hidden lg:flex gap-9">
-            <Link
-              href={"/"}
-              className="text-base font-bold text-white uppercase"
-            >
+            <Link href={"/"} className="text-base font-bold text-white uppercase">
               Home
             </Link>
 
-            <Link
-              href={"/collection/new"}
-              className="text-base font-bold text-white uppercase"
-            >
+            <Link href={"/collection/new"} className="text-base font-bold text-white uppercase">
               Post Collection
             </Link>
           </div>
@@ -142,19 +133,34 @@ const Navbar: FC = () => {
           </Button>
         </a>
         {address && (
-          <Link href={`/user/${address}`}>
-            <Button
-              className="uppercase text-base text-white flex gap-2 items-center"
-              type="transparent"
-            >
-              <Image
-                src={userIcon}
-                alt="marketplan nitfee discord"
-                className="w-6 h-6 object-contain"
-              />
-              Profile
-            </Button>
-          </Link>
+          <>
+            <Link href={`/dashboard`}>
+              <Button
+                className="uppercase text-base text-white flex gap-2 items-center"
+                type="transparent"
+              >
+                {/* <Image
+                  src={userIcon}
+                  alt="marketplan nitfee discord"
+                  className="w-6 h-6 object-contain"
+                /> */}
+                Stake
+              </Button>
+            </Link>
+            <Link href={`/user/${address}`}>
+              <Button
+                className="uppercase text-base text-white flex gap-2 items-center"
+                type="transparent"
+              >
+                <Image
+                  src={userIcon}
+                  alt="marketplan nitfee discord"
+                  className="w-6 h-6 object-contain"
+                />
+                Profile
+              </Button>
+            </Link>
+          </>
         )}
         {walletBtn}
       </div>
