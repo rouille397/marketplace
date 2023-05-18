@@ -13,58 +13,42 @@ import {
   useContractWrite,
   useOwnedNFTs,
 } from "@thirdweb-dev/react";
-import { GOLD_NFT_ADDRESS, GOLD_STAKING_ADDRESS } from "@/addresses";
+import {
+  BRONZE_NFT_ADDRESS,
+  GOLD_NFT_ADDRESS,
+  GOLD_STAKING_ADDRESS,
+  SILVER_NFT_ADDRESS,
+} from "@/addresses";
 
 const stakeCategories = ["stake", "un-stake", "claim", "un-claimed points"];
 
 export default function Dashboard() {
   console.log("GOLD_STAKING_ADDRESS", GOLD_STAKING_ADDRESS);
 
-  const [selectedType, setSelectedType] = useState<any>(null);
-  const address = useAddress();
+  // const approveFOrAll = async () => {
+  //   try {
+  //     const data = await setApprovalForAll({
+  //       args: [GOLD_STAKING_ADDRESS, true],
+  //     });
+  //     console.info("contract call successs", data);
+  //   } catch (err) {
+  //     console.error("contract call failure", err);
+  //   }
+  // };
 
-  const { contract } = useContract(GOLD_STAKING_ADDRESS);
-  const { mutateAsync: stake, isLoading } = useContractWrite(contract, "stake");
-  const { contract: nftContract } = useContract(GOLD_NFT_ADDRESS);
-  const { data: isAlreadyApproved, isLoading: isApprovedLoading } = useContractRead(
-    nftContract,
-    "isApprovedForAll",
-    [address, GOLD_STAKING_ADDRESS],
-  );
-  console.log("isAlreadyApproved", isAlreadyApproved);
-  const { mutateAsync: setApprovalForAll } = useContractWrite(nftContract, "setApprovalForAll");
-
-  const {
-    data: ownedNfts,
-    isLoading: ownedNftsLoading,
-    error: ownedNftsError,
-  } = useOwnedNFTs(nftContract, address);
-  console.log("ownedNfts", ownedNfts);
-
-  const approveFOrAll = async () => {
-    try {
-      const data = await setApprovalForAll({
-        args: [GOLD_STAKING_ADDRESS, true],
-      });
-      console.info("contract call successs", data);
-    } catch (err) {
-      console.error("contract call failure", err);
-    }
-  };
-
-  const stakeHandler = async () => {
-    console.info("contract call", contract);
-    try {
-      const data = await stake({ args: [["30"]] });
-      console.info("contract call successs", data);
-    } catch (err) {
-      console.error("contract call failure", err);
-    }
-  };
+  // const stakeHandler = async () => {
+  //   console.info("contract call", contract);
+  //   try {
+  //     const data = await stake({ args: [["30"]] });
+  //     console.info("contract call successs", data);
+  //   } catch (err) {
+  //     console.error("contract call failure", err);
+  //   }
+  // };
 
   return (
     <React.Fragment>
-      {!isAlreadyApproved ? (
+      {/* {!isAlreadyApproved ? (
         <button className="px-5 py-3 mt-20 bg-red-400" onClick={approveFOrAll}>
           approve for all
         </button>
@@ -72,7 +56,7 @@ export default function Dashboard() {
         <button className="px-5 py-3 mt-20 bg-red-400" onClick={stakeHandler}>
           STAKE
         </button>
-      )}
+      )} */}
 
       {/* hero */}
       <div className="flex flex-col overflow-hidden justify-center bg-[url('/images/stake-hero-img.png')] bg-cover min-[1440px]:bg-cover bg-no-repeat h-[700px] lg:h-[884px] xl:min-h-[884px] lg:px-48 px-4 relative">
@@ -101,7 +85,7 @@ export default function Dashboard() {
         </h2>
       </div>
       {/* stake categories */}
-      <div className="flex justify-start lg:justify-center items-center gap-5 md:mb-24 mb-12 overflow-x-scroll mt-12 md:mt-20 px-4">
+      {/* <div className="flex justify-start lg:justify-center items-center gap-5 md:mb-24 mb-12 overflow-x-scroll mt-12 md:mt-20 px-4">
         {stakeCategories?.map((category, index) =>
           index === stakeCategories.length - 1 ? (
             <Button
@@ -129,7 +113,7 @@ export default function Dashboard() {
             </Button>
           ),
         )}
-      </div>
+      </div> */}
       {/* stake insights */}
       <StakeDashboard />
 
