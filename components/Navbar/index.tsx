@@ -102,25 +102,17 @@ const Navbar: FC = () => {
             alt="NITFEE"
             className="w-[46px] h-[48px] lg:w-[72px] lg:h-[70px] object-contain"
           />
-          <h1 className="text-2xl text-white lg:text-[32px] font-bold uppercase">
-            NITFEE
-          </h1>
+          <h1 className="text-2xl text-white lg:text-[32px] font-bold uppercase">NITFEE</h1>
         </div>
       </Link>
       {address?.toLowerCase() == ADMIN?.toLowerCase() && (
         <>
           <div className="hidden lg:flex gap-9">
-            <Link
-              href={"/"}
-              className="text-base font-bold text-white uppercase"
-            >
+            <Link href={"/"} className="text-base font-bold text-white uppercase">
               Home
             </Link>
 
-            <Link
-              href={"/collection/new"}
-              className="text-base font-bold text-white uppercase"
-            >
+            <Link href={"/collection/new"} className="text-base font-bold text-white uppercase">
               Post Collection
             </Link>
           </div>
@@ -128,19 +120,16 @@ const Navbar: FC = () => {
       )}
 
       <div className="hidden lg:flex gap-5">
-        <a href="https://twitter.com/nitfeemarketCFX" target={"_blank"}>
-          <Button
-            className="uppercase text-base text-white flex gap-2 items-center"
-            type="transparent"
-          >
-            <Image
-              src={twitter}
-              alt="marketplan nitfee discord"
-              className="w-6 h-6 object-contain"
-            />
-            Twitter
-          </Button>
-        </a>
+        {address && (
+          <Link href="/dashboard">
+            <Button
+              className="uppercase text-base text-white flex gap-2 items-center"
+              type="transparent"
+            >
+              Staking
+            </Button>
+          </Link>
+        )}
         {address && (
           <Link href={`/user/${address}`}>
             <Button

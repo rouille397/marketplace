@@ -6,7 +6,13 @@ import Image from "next/image";
 import styles from "../styles/Dashboard.module.css";
 import NftCard from "@/components/NftCard";
 import StakeDashboard from "@/components/StakeDashboard";
-import { useAddress, useContract, useContractRead, useContractWrite } from "@thirdweb-dev/react";
+import {
+  useAddress,
+  useContract,
+  useContractRead,
+  useContractWrite,
+  useOwnedNFTs,
+} from "@thirdweb-dev/react";
 
 const stakeCategories = ["stake", "un-stake", "claim", "un-claimed points"];
 
@@ -25,6 +31,13 @@ export default function Dashboard() {
   console.log("isAlreadyApproved", isAlreadyApproved);
   const { mutateAsync: setApprovalForAll } = useContractWrite(nftContract, "setApprovalForAll");
 
+  const {
+    data: ownedNfts,
+    isLoading: ownedNftsLoading,
+    error: ownedNftsError,
+  } = useOwnedNFTs(nftContract, address);
+  console.log("ownedNfts", ownedNfts);
+
   const approveFOrAll = async () => {
     try {
       const data = await setApprovalForAll({
@@ -39,7 +52,7 @@ export default function Dashboard() {
   const stakeHandler = async () => {
     console.info("contract call", contract);
     try {
-      const data = await stake({ args: [["38"]] });
+      const data = await stake({ args: [["30"]] });
       console.info("contract call successs", data);
     } catch (err) {
       console.error("contract call failure", err);

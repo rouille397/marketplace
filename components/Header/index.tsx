@@ -99,19 +99,14 @@ const Header = () => {
         </h1>
         <div className={`z-[1] absolute lg:hidden ${address ? "top-[62%]" : "top-[66%]"}`}>
           <div className="flex gap-6 items-center">
-            <a href="https://twitter.com/nitfeemarketCFX" target={"_blank"}>
+            {address && (
               <Button
                 className="uppercase text-base text-white flex gap-2 items-center"
                 type="transparent"
               >
-                <Image
-                  src={twitter}
-                  alt="marketplan nitfee discord"
-                  className="w-6 h-6 object-contain"
-                />
-                Twitter
+                Staking
               </Button>
-            </a>
+            )}
             {connectBtn}
           </div>
           <div className="mt-4 flex justify-center">
