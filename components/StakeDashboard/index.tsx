@@ -427,12 +427,11 @@ const StakeDashboard: FC = () => {
                   <>
                     <p className="text-lg font-semibold text-white">Amount Accumulated</p>
                     <span className="text-4xl font-bold text-white block ">
-                      {/* {singleTypeInterestAccrued} CFX */}---
+                      {singleTypeInterestAccrued} CFX
                     </span>
                     <button
                       onClick={claimRewardsHandler}
                       className="stake-btn text-white block w-full font-semibold py-3 px-6 rounded-lg"
-                      // onClick={() => handleClick(2)}
                     >
                       Claim
                     </button>
