@@ -6,14 +6,58 @@ import Image from "next/image";
 import styles from "../styles/Dashboard.module.css";
 import NftCard from "@/components/NftCard";
 import StakeDashboard from "@/components/StakeDashboard";
+import { useAddress, useContract, useContractRead, useContractWrite } from "@thirdweb-dev/react";
 
 const stakeCategories = ["stake", "un-stake", "claim", "un-claimed points"];
 
 export default function Dashboard() {
   const [selectedType, setSelectedType] = useState<any>(null);
+  const address = useAddress();
+
+  const { contract } = useContract("0x148dC0Ed543E2CE3e693c13B71b0Da63467596b6");
+  const { mutateAsync: stake, isLoading } = useContractWrite(contract, "stake");
+  const { contract: nftContract } = useContract("0x6b4AC814324544f782eF5bdfdf7fA699D0C6377F");
+  const { data: isAlreadyApproved, isLoading: isApprovedLoading } = useContractRead(
+    nftContract,
+    "isApprovedForAll",
+    [address, "0x148dC0Ed543E2CE3e693c13B71b0Da63467596b6"],
+  );
+  console.log("isAlreadyApproved", isAlreadyApproved);
+  const { mutateAsync: setApprovalForAll } = useContractWrite(nftContract, "setApprovalForAll");
+
+  const approveFOrAll = async () => {
+    try {
+      const data = await setApprovalForAll({
+        args: ["0x148dC0Ed543E2CE3e693c13B71b0Da63467596b6", true],
+      });
+      console.info("contract call successs", data);
+    } catch (err) {
+      console.error("contract call failure", err);
+    }
+  };
+
+  const stakeHandler = async () => {
+    console.info("contract call", contract);
+    try {
+      const data = await stake({ args: [["38"]] });
+      console.info("contract call successs", data);
+    } catch (err) {
+      console.error("contract call failure", err);
+    }
+  };
 
   return (
     <React.Fragment>
+      {!isAlreadyApproved ? (
+        <button className="px-5 py-3 mt-20 bg-red-400" onClick={approveFOrAll}>
+          approve for all
+        </button>
+      ) : (
+        <button className="px-5 py-3 mt-20 bg-red-400" onClick={stakeHandler}>
+          STAKE
+        </button>
+      )}
+
       {/* hero */}
       <div className="flex flex-col overflow-hidden justify-center bg-[url('/images/stake-hero-img.png')] bg-cover min-[1440px]:bg-cover bg-no-repeat h-[700px] lg:h-[884px] xl:min-h-[884px] lg:px-48 px-4 relative">
         <div
