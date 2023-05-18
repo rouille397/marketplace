@@ -14,7 +14,7 @@ const roboto = Roboto({
 });
 function MyApp({ Component, pageProps }: AppProps) {
   return (
-    <ThirdwebProvider activeChain={"goerli"}>
+    <ThirdwebProvider activeChain={ConfluxEspace}>
       <Head>
         <title>Nitfee Marketplace</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />

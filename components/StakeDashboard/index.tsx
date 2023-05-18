@@ -1,10 +1,7 @@
 import React, { FC, useEffect, useState } from "react";
-import NftCard from "../NftCard";
-import lightningHand from "../../public/images/lightning-hand.png";
 import Image from "next/image";
 import styles from "../../styles/Dashboard.module.css";
 import {
-  getContract,
   useAddress,
   useContract,
   useContractRead,
@@ -29,10 +26,15 @@ const StakeDashboard: FC = () => {
   const address = useAddress();
 
   const [activeBtn, setActiveBtn] = useState<number>(0);
-  const [selectedNft, setSelectedNft] = useState<string>("");
+  const [selectedNft, setSelectedNft] = useState<string>("golden");
   const [goldStakeInfo, setGoldStakeInfo] = useState<any>({});
   const [silverStakeInfo, setSilverStakeInfo] = useState<any>({});
   const [bronzeStakeInfo, setBronzeStakeInfo] = useState<any>({});
+  const [toStakeEntered, setToStakeEntered] = useState<number>(0);
+  const [toUnStakeEntered, setToUnStakeEntered] = useState<number>(0);
+  const [accGoldInterest, setAccGoldInterest] = useState<number>(0);
+  const [accSilverInterest, setAccSilverInterest] = useState<number>(0);
+  const [accBronzeInterest, setAccBronzeInterest] = useState<number>(0);
 
   // nft staking contract address
   const { contract: goldStakingContract } = useContract(GOLD_STAKING_ADDRESS);
@@ -45,84 +47,119 @@ const StakeDashboard: FC = () => {
   const { contract: bronzeNftContract } = useContract(BRONZE_NFT_ADDRESS);
 
   // owned nfts read
-  const { data: goldOwnedNfts, isLoading: goldOwnedNftsLoading } = useOwnedNFTs(
+  const { data: goldOwnedNfts, refetch: refetchGoldOwnedNfts } = useOwnedNFTs(
     goldNftContract,
     address,
   );
-  const { data: silverOwnedNfts, isLoading: silverOwnedNftsLoading } = useOwnedNFTs(
+  const { data: silverOwnedNfts, refetch: refetchSilverOwnedNfts } = useOwnedNFTs(
     silverNftContract,
     address,
   );
-  const { data: bronzeOwnedNfts, isLoading: bronzeOwnedNftsLoading } = useOwnedNFTs(
+  const { data: bronzeOwnedNfts, refetch: refetchBronzeOwnedNfts } = useOwnedNFTs(
     bronzeNftContract,
     address,
   );
 
   // approve for all read
-  const { data: goldNftRead, isLoading: goldApproveLoading } = useContractRead(
+  const { data: goldNftRead } = useContractRead(goldNftContract, "isApprovedForAll", [
+    address,
+    GOLD_STAKING_ADDRESS,
+  ]);
+  const { data: silverNftRead } = useContractRead(silverNftContract, "isApprovedForAll", [
+    address,
+    SIVER_STAKING_ADDRESS,
+  ]);
+  const { data: bronzeNftRead } = useContractRead(bronzeNftContract, "isApprovedForAll", [
+    address,
+    BRONZE_STAKING_ADDRESS,
+  ]);
+
+  // approve for all  write
+  const { mutateAsync: setApprovalForAllGold } = useContractWrite(
     goldNftContract,
-    "isApprovedForAll",
-    [address, GOLD_NFT_ADDRESS],
+    "setApprovalForAll",
   );
-  const { data: silverNftRead, isLoading: silverApproveLoading } = useContractRead(
+  const { mutateAsync: setApprovalForAllSilver } = useContractWrite(
     silverNftContract,
-    "isApprovedForAll",
-    [address, SILVER_NFT_ADDRESS],
+    "setApprovalForAll",
   );
-  const { data: bronzeNftRead, isLoading: bronzeApproveLoading } = useContractRead(
+  const { mutateAsync: setApprovalForAllBronze } = useContractWrite(
     bronzeNftContract,
-    "isApprovedForAll",
-    [address, BRONZE_NFT_ADDRESS],
+    "setApprovalForAll",
   );
 
-  //stake write
-  const { mutateAsync: setApprovalForAllGold } = useContractWrite(goldNftContract, "stake");
-  const { mutateAsync: setApprovalForAllSilver } = useContractWrite(silverNftContract, "stake");
-  const { mutateAsync: setApprovalForAllBronze } = useContractWrite(bronzeNftContract, "stake");
+  // stake functions
+  const { mutateAsync: goldStakeHandler } = useContractWrite(goldStakingContract, "stake");
+  const { mutateAsync: silverStakeHandler } = useContractWrite(silverStakingContract, "stake");
+  const { mutateAsync: bronzeStakeHandler } = useContractWrite(bronzeStakingContract, "stake");
 
-  // unstake read
+  // unstake write
+  const { mutateAsync: goldUnstaking } = useContractWrite(goldStakingContract, "withdraw");
+  const { mutateAsync: silverUnstaking } = useContractWrite(silverStakingContract, "withdraw");
+  const { mutateAsync: bronzeUnstaking } = useContractWrite(bronzeStakingContract, "withdraw");
+
+  // claim write
+  const { mutateAsync: claimGoldRewards } = useContractWrite(goldStakingContract, "claimRewards");
+  const { mutateAsync: claimSilverRewards } = useContractWrite(
+    silverStakingContract,
+    "claimRewards",
+  );
+  const { mutateAsync: claimBronzeRewards } = useContractWrite(
+    bronzeStakingContract,
+    "claimRewards",
+  );
+
+  const getStakeInfoHandler = async () => {
+    const goldStakingContract = new ethers.Contract(GOLD_STAKING_ADDRESS, abi, provider);
+    let updatedGoldStakingContract = await goldStakingContract.getStakeInfo(address);
+    setAccGoldInterest(
+      ethers.BigNumber.from(updatedGoldStakingContract._rewards.toString())
+        .div(ethers.BigNumber.from(10).pow(18))
+        .toNumber(),
+    );
+
+    updatedGoldStakingContract = updatedGoldStakingContract._tokensStaked.map((item: any) =>
+      item.toString(),
+    );
+    setGoldStakeInfo(updatedGoldStakingContract);
+
+    const silverStakingContract = new ethers.Contract(SIVER_STAKING_ADDRESS, abi, provider);
+    let updatedSilverStakingContract = await silverStakingContract.getStakeInfo(address);
+    setAccSilverInterest(
+      ethers.BigNumber.from(updatedSilverStakingContract._rewards.toString())
+        .div(ethers.BigNumber.from(10).pow(18))
+        .toNumber(),
+    );
+    updatedSilverStakingContract = updatedSilverStakingContract._tokensStaked.map((item: any) =>
+      item.toString(),
+    );
+    setSilverStakeInfo(updatedSilverStakingContract);
+
+    const bronzeStakingContract = new ethers.Contract(BRONZE_STAKING_ADDRESS, abi, provider);
+    let updatedBronzeStakingContract = await bronzeStakingContract.getStakeInfo(address);
+    setAccBronzeInterest(
+      ethers.BigNumber.from(updatedBronzeStakingContract._rewards.toString())
+        .div(ethers.BigNumber.from(10).pow(18))
+        .toNumber(),
+    );
+    updatedBronzeStakingContract = updatedBronzeStakingContract._tokensStaked.map((item: any) =>
+      item.toString(),
+    );
+    setBronzeStakeInfo(updatedBronzeStakingContract);
+    console.log(
+      "updatedGoldStakingContract",
+      updatedGoldStakingContract,
+      updatedSilverStakingContract,
+      updatedBronzeStakingContract,
+    );
+  };
 
   useEffect(() => {
     if (!provider || !address) return;
-    (async () => {
-      const goldStakingContract = new ethers.Contract(GOLD_STAKING_ADDRESS, abi, provider);
-      let updatedGoldStakingContract = await goldStakingContract.getStakeInfo(address);
-      updatedGoldStakingContract = updatedGoldStakingContract._tokensStaked.map((item: any) =>
-        item.toString(),
-      );
-      setGoldStakeInfo(updatedGoldStakingContract);
-
-      const silverStakingContract = new ethers.Contract(SIVER_STAKING_ADDRESS, abi, provider);
-      let updatedSilverStakingContract = await silverStakingContract.getStakeInfo(address);
-      updatedSilverStakingContract = updatedSilverStakingContract._tokensStaked.map((item: any) =>
-        item.toString(),
-      );
-      setSilverStakeInfo(updatedSilverStakingContract);
-
-      const bronzeStakingContract = new ethers.Contract(BRONZE_STAKING_ADDRESS, abi, provider);
-      let updatedBronzeStakingContract = await bronzeStakingContract.getStakeInfo(address);
-      updatedBronzeStakingContract = updatedBronzeStakingContract._tokensStaked.map((item: any) =>
-        item.toString(),
-      );
-      setBronzeStakeInfo(updatedBronzeStakingContract);
-      console.log(
-        "updatedGoldStakingContract",
-        updatedGoldStakingContract,
-        updatedSilverStakingContract,
-        updatedBronzeStakingContract,
-      );
-    })();
+    getStakeInfoHandler();
   }, [provider, address]);
 
-  // const { data: goldStakeValue } = useContractRead(goldStakingContract, "getStakeInfo", [address]);
-  // const { data: silverStakeValue } = useContractRead(silverStakingContract, "getStakeInfo", [
-  //   address,
-  // ]);
-  // const { data: bronzeStakeValue } = useContractRead(bronzeStakingContract, "getStakeInfo", [
-  //   address,
-  // ]);
-
-  const handleClick = (btnId: number) => {
+  const handleClick = async (btnId: number) => {
     setActiveBtn(btnId);
   };
 
@@ -136,7 +173,7 @@ const StakeDashboard: FC = () => {
   let calculateUnstakeVaule = 0;
   let calculateNftsValue = goldOwnedNfts?.length || 0;
 
-  if (selectedNft === "gold") {
+  if (selectedNft === "golden") {
     selectedNftImage = "/images/gold.jpeg";
     calculateAnualInterest = 50;
     calculateNftsValue = goldOwnedNfts?.length || 0;
@@ -157,10 +194,165 @@ const StakeDashboard: FC = () => {
     calculateDailyInterest = 0.045;
     calculateUnstakeVaule = bronzeStakeInfo?.length || 0;
   }
+  console.log("goldstakeinfo", goldStakeInfo);
+
+  const stakeHandler = async () => {
+    console.log("stakeHandler", selectedNft);
+    // if toStakeEntered is greater than owned nfts then return
+    if (!provider || !address || toStakeEntered == 0 || toStakeEntered > calculateNftsValue) return;
+    try {
+      if (selectedNft === "golden") {
+        if (!goldNftRead) {
+          console.log("goldNftRead", goldNftRead);
+          const data = await setApprovalForAllGold({ args: [GOLD_STAKING_ADDRESS, true] });
+          console.info("contract call successs", data);
+        }
+        if (!goldOwnedNfts) return;
+        // stake gold nft
+        // take the first nfts from the array equal to toStakeEntered
+        console.info(
+          "contract call successs",
+          goldOwnedNfts.slice(0, toStakeEntered).map((item) => item.metadata.id),
+        );
+
+        const data = await goldStakeHandler({
+          args: [goldOwnedNfts.slice(0, toStakeEntered).map((item) => item.metadata.id)],
+        });
+        alert("Staked Successfully");
+      }
+      if (selectedNft === "silver") {
+        if (!silverNftRead) {
+          const data = await setApprovalForAllSilver({ args: [SIVER_STAKING_ADDRESS, true] });
+          console.info("contract call successs", data);
+        }
+        if (!silverOwnedNfts) return;
+        // stake silver nft
+        // take the first nfts from the array equal to toStakeEntered
+        console.info(
+          "contract call successs",
+          silverOwnedNfts.slice(0, toStakeEntered).map((item) => item.metadata.id),
+        );
+
+        const data = await silverStakeHandler({
+          args: [silverOwnedNfts.slice(0, toStakeEntered).map((item) => item.metadata.id)],
+        });
+        alert("Staked Successfully");
+      }
+      if (selectedNft === "bronze") {
+        if (!bronzeNftRead) {
+          const data = await setApprovalForAllBronze({ args: [BRONZE_STAKING_ADDRESS, true] });
+          console.info("contract call successs", data);
+        }
+        if (!bronzeOwnedNfts) return;
+        // stake bronze nft
+        // take the first nfts from the array equal to toStakeEntered
+        console.info(
+          "contract call successs",
+          bronzeOwnedNfts.slice(0, toStakeEntered).map((item) => item.metadata.id),
+        );
+
+        const data = await bronzeStakeHandler({
+          args: [bronzeOwnedNfts.slice(0, toStakeEntered).map((item) => item.metadata.id)],
+        });
+        alert("Staked Successfully");
+      }
+      // refetch all nfts
+      getStakeInfoHandler();
+      refetchGoldOwnedNfts();
+      refetchSilverOwnedNfts();
+      refetchBronzeOwnedNfts();
+    } catch (error) {
+      console.log("error", error);
+    }
+  };
+
+  const unstakeHandler = async () => {
+    console.log("unstakeHandler", selectedNft);
+    // if toStakeEntered is greater than owned nfts then return
+    if (!provider || !address || toUnStakeEntered == 0 || toUnStakeEntered > calculateUnstakeVaule)
+      return;
+    try {
+      if (selectedNft === "golden") {
+        if (!goldNftRead) {
+          console.log("goldNftRead", goldNftRead);
+          const data = await setApprovalForAllGold({ args: [GOLD_STAKING_ADDRESS, true] });
+          console.info("contract call successs", data);
+        }
+        if (!goldStakeInfo) return;
+
+        const data = await goldUnstaking({
+          args: [goldStakeInfo.slice(0, toUnStakeEntered)],
+        });
+        alert("unstake success");
+      }
+      if (selectedNft === "silver") {
+        if (!silverNftRead) {
+          const data = await setApprovalForAllSilver({ args: [SIVER_STAKING_ADDRESS, true] });
+          console.info("contract call successs", data);
+        }
+        if (!silverStakeInfo) return;
+        // stake silver nft
+        // take the first nfts from the array equal to toStakeEntered
+        const data = await silverUnstaking({
+          args: [silverStakeInfo.slice(0, toUnStakeEntered)],
+        });
+        alert("unstake success");
+      }
+      if (selectedNft === "bronze") {
+        if (!bronzeNftRead) {
+          const data = await setApprovalForAllBronze({ args: [BRONZE_STAKING_ADDRESS, true] });
+          console.info("contract call successs", data);
+        }
+        if (!bronzeStakeInfo) return;
+        const data = await bronzeUnstaking({
+          args: [bronzeStakeInfo.slice(0, toUnStakeEntered)],
+        });
+        alert("unstake success");
+      }
+      // refetch all nfts
+      getStakeInfoHandler();
+      refetchGoldOwnedNfts();
+      refetchSilverOwnedNfts();
+      refetchBronzeOwnedNfts();
+    } catch (error) {
+      console.log("error", error);
+    }
+  };
+
+  let singleTypeInterestAccrued = 0;
+  if (selectedNft === "golden") {
+    singleTypeInterestAccrued = accGoldInterest;
+  }
+  if (selectedNft === "silver") {
+    singleTypeInterestAccrued = accSilverInterest;
+  }
+  if (selectedNft === "bronze") {
+    singleTypeInterestAccrued = accBronzeInterest;
+  }
+
+  let totalInterestAccured = accGoldInterest + accSilverInterest + accBronzeInterest;
+  console.log("singleTypeInterestAccrued", singleTypeInterestAccrued);
+  console.log("totalInterestAccured", totalInterestAccured);
+  const claimRewardsHandler = async () => {
+    if (!provider || !address) return;
+    try {
+      if (selectedNft === "golden") {
+        const data = await claimGoldRewards({ args: [] });
+      }
+      if (selectedNft === "silver") {
+        const data = await claimSilverRewards({ args: [] });
+      }
+      if (selectedNft === "bronze") {
+        const data = await claimBronzeRewards({ args: [] });
+      }
+    } catch (error) {
+      console.log("error", error);
+    }
+  };
 
   return (
     <React.Fragment>
-      <section className="lg:px-[78px] px-4">
+      <section className=" md:mt-10 mt-5">
         <div className={`mx-auto lg:p-[102px] p-4 relative rounded-[20px] ${styles.stakeInsights}`}>
           <div className="flex xl:flex-row justify-center gap-16 flex-wrap">
             <div className="  space-y-12">
@@ -172,7 +364,7 @@ const StakeDashboard: FC = () => {
                 height={475}
               />
               <h1 className="text-center text-white text-3xl font-bold tracking-widest">
-                {selectedNft?.toUpperCase() || "GOLD"} NFT
+                {selectedNft?.toUpperCase() || "GOLDEN"} NFT
               </h1>
             </div>
             <div className="md:space-y-[86px] space-y-8">
@@ -188,7 +380,7 @@ const StakeDashboard: FC = () => {
               <div className="text-center space-y-5">
                 {activeBtn !== 1 && (
                   <>
-                    <p className="text-lg font-semibold text-white">Balance</p>
+                    <p className="text-lg font-semibold text-white">Available For Staking</p>
                     <span className="text-4xl font-bold text-white block ">
                       {calculateNftsValue}
                     </span>
@@ -204,11 +396,19 @@ const StakeDashboard: FC = () => {
                   <>
                     <label htmlFor="" className="flex justify-between items-center">
                       <span>Balance</span>
-                      <span>27</span>
+                      <span>{calculateNftsValue}</span>
                     </label>
-                    <input type="text" className="py-[10px] bg-[#11171D] w-full" />
+                    <input
+                      type="number"
+                      className="py-[10px] bg-[#11171D] w-full"
+                      value={toStakeEntered}
+                      onChange={(e) => setToStakeEntered(+e.target.value)}
+                    />
                     <div className="flex items-center justify-between gap-5">
-                      <button className="stake-btn text-white block w-full font-semibold py-3 px-6 rounded-lg">
+                      <button
+                        className="stake-btn text-white block w-full font-semibold py-3 px-6 rounded-lg"
+                        onClick={stakeHandler}
+                      >
                         Stake
                       </button>
                       <button
@@ -225,34 +425,17 @@ const StakeDashboard: FC = () => {
               <div className="text-center space-y-5">
                 {activeBtn !== 2 && (
                   <>
-                    <p className="text-lg font-semibold text-white">Balance</p>
-                    <span className="text-4xl font-bold text-white block ">10%</span>
+                    <p className="text-lg font-semibold text-white">Amount Accumulated</p>
+                    <span className="text-4xl font-bold text-white block ">
+                      {/* {singleTypeInterestAccrued} CFX */}---
+                    </span>
                     <button
+                      onClick={claimRewardsHandler}
                       className="stake-btn text-white block w-full font-semibold py-3 px-6 rounded-lg"
-                      onClick={() => handleClick(2)}
+                      // onClick={() => handleClick(2)}
                     >
-                      Stake
+                      Claim
                     </button>
-                  </>
-                )}
-                {activeBtn === 2 && (
-                  <>
-                    <label htmlFor="" className="flex justify-between items-center">
-                      <span>Balance</span>
-                      <span>27</span>
-                    </label>
-                    <input type="text" className="py-[10px] bg-[#11171D] w-full" />
-                    <div className="flex items-center justify-between gap-5">
-                      <button className="stake-btn text-white block w-full font-semibold py-3 px-6 rounded-lg">
-                        Stake
-                      </button>
-                      <button
-                        className="stake-btn text-white block w-full font-semibold py-3 px-6 rounded-lg"
-                        onClick={handleCancelClick}
-                      >
-                        Cancel
-                      </button>
-                    </div>
                   </>
                 )}
               </div>
@@ -270,7 +453,7 @@ const StakeDashboard: FC = () => {
               <div className="text-center space-y-5">
                 {activeBtn !== 3 && (
                   <>
-                    <p className="text-lg font-semibold text-white">Balance</p>
+                    <p className="text-lg font-semibold text-white">Available For Unstaking</p>
                     <span className="text-4xl font-bold text-white block ">
                       {calculateUnstakeVaule}
                     </span>
@@ -286,46 +469,20 @@ const StakeDashboard: FC = () => {
                   <>
                     <label htmlFor="" className="flex justify-between items-center">
                       <span>Balance</span>
-                      <span>27</span>
+                      <span> {calculateUnstakeVaule}</span>
                     </label>
-                    <input type="text" className="py-[10px] bg-[#11171D] w-full" />
+                    <input
+                      type="text"
+                      className="py-[10px] bg-[#11171D] w-full"
+                      value={toUnStakeEntered}
+                      onChange={(e) => setToUnStakeEntered(+e.target.value)}
+                    />
                     <div className="flex items-center justify-between gap-5">
-                      <button className="stake-btn text-white block w-full font-semibold py-3 px-6 rounded-lg">
-                        Stake
-                      </button>
                       <button
                         className="stake-btn text-white block w-full font-semibold py-3 px-6 rounded-lg"
-                        onClick={handleCancelClick}
+                        onClick={unstakeHandler}
                       >
-                        Cancel
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
-              <div className="text-center space-y-5">
-                {activeBtn !== 4 && (
-                  <>
-                    <p className="text-lg font-semibold text-white">Balance</p>
-                    <span className="text-4xl font-bold text-white block ">10%</span>
-                    <button
-                      className="stake-btn text-white block w-full font-semibold py-3 px-6 rounded-lg"
-                      onClick={() => handleClick(4)}
-                    >
-                      Stake
-                    </button>
-                  </>
-                )}
-                {activeBtn === 4 && (
-                  <>
-                    <label htmlFor="" className="flex justify-between items-center">
-                      <span>Balance</span>
-                      <span>27</span>
-                    </label>
-                    <input type="text" className="py-[10px] bg-[#11171D] w-full" />
-                    <div className="flex items-center justify-between gap-5">
-                      <button className="stake-btn text-white block w-full font-semibold py-3 px-6 rounded-lg">
-                        Stake
+                        Unstake
                       </button>
                       <button
                         className="stake-btn text-white block w-full font-semibold py-3 px-6 rounded-lg"
@@ -345,7 +502,7 @@ const StakeDashboard: FC = () => {
           <div
             className="rounded-lg w-full h-full group cursor-pointer relative"
             onClick={() => {
-              setSelectedNft("gold");
+              setSelectedNft("golden");
             }}
           >
             <img
@@ -355,7 +512,7 @@ const StakeDashboard: FC = () => {
             />
             <div className="absolute bottom-0 left-0 w-full h-full bg-gradient-to-t from-black to-transparent hidden justify-center items-center group-hover:flex cursor-pointer">
               <div className="text-center">
-                <p className="font-semibold md:text-3xl text-base ">Gold</p>
+                <p className="font-semibold md:text-3xl text-base ">Golden</p>
                 <p className="text-white md:text-[18px] text-sm font-semibold">
                   {goldOwnedNfts?.length} NFTs
                 </p>

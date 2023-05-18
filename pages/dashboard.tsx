@@ -122,15 +122,16 @@ export default function Dashboard() {
         <div className="bg-no-repeat flex-col items-center space-y-5 md:space-y-10 md:p-9 p-4 text-center relative bg-[#11171D]/80 md:bg-[url('/images/burn-token.jpg')] bg-cover rounded-[20px] md:min-h-[302px]">
           <div className="absolute inset-0 bg-black/80 md:flex hidden z-[6]"></div>
           <h2 className="uppercase text-2xl md:text-4xl md:relative md:z-[7] text-bold">
-            BURN $INFKT TOKENS HERE:
+            Exchange WCFX/CFX
           </h2>
-          <button className="stake-btn text-[#141B22] md:relative md:z-[7] text-base font-semibold py-3 px-6 rounded-lg uppercase">
+          {/* <button className="stake-btn text-[#141B22] md:relative md:z-[7] text-base font-semibold py-3 px-6 rounded-lg uppercase">
             convert to points
-          </button>
+          </button> */}
           <p className="text-base font-normal md:relative md:z-[7]">
-            In the next chapter, your treasured $INFKT tokens transform into points, amplifying your
+            {/* In the next chapter, your treasured $INFKT tokens transform into points, amplifying your
             power and influence. This conversion opens doors to exclusive experiences, granting you
-            access to uncharted territories and hidden treasures within the INFKTED ecosystem..
+            access to uncharted territories and hidden treasures within the INFKTED ecosystem.. */}
+            Here you will be able to exchange your rewarded WCFX to CFX. This feature is coming soon
           </p>
         </div>
       </section>
