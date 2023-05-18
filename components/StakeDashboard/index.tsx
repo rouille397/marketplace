@@ -189,7 +189,7 @@ const StakeDashboard: FC = () => {
   }
   if (selectedNft === "bronze") {
     selectedNftImage = "/images/bronze.jpeg";
-    calculateAnualInterest = 20;
+    calculateAnualInterest = 30;
     calculateNftsValue = bronzeOwnedNfts?.length || 0;
     calculateDailyInterest = 0.045;
     calculateUnstakeVaule = bronzeStakeInfo?.length || 0;
