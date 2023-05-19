@@ -100,12 +100,14 @@ const Header = () => {
         <div className={`z-[1] absolute lg:hidden ${address ? "top-[62%]" : "top-[66%]"}`}>
           <div className="flex gap-6 items-center">
             {address && (
-              <Button
-                className="uppercase text-base text-white flex gap-2 items-center"
-                type="transparent"
-              >
-                Staking
-              </Button>
+              <Link href="/dashboard">
+                <Button
+                  className="uppercase text-base text-white flex gap-2 items-center"
+                  type="transparent"
+                >
+                  Staking
+                </Button>
+              </Link>
             )}
             {connectBtn}
           </div>

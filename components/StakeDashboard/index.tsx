@@ -112,12 +112,7 @@ const StakeDashboard: FC = () => {
   const getStakeInfoHandler = async () => {
     const goldStakingContract = new ethers.Contract(GOLD_STAKING_ADDRESS, abi, provider);
     let updatedGoldStakingContract = await goldStakingContract.getStakeInfo(address);
-    setAccGoldInterest(
-      ethers.BigNumber.from(updatedGoldStakingContract._rewards.toString())
-        .div(ethers.BigNumber.from(10).pow(18))
-        .toNumber(),
-    );
-
+    setAccGoldInterest(+ethers.BigNumber.from(updatedGoldStakingContract._rewards.toString()));
     updatedGoldStakingContract = updatedGoldStakingContract._tokensStaked.map((item: any) =>
       item.toString(),
     );
@@ -126,9 +121,7 @@ const StakeDashboard: FC = () => {
     const silverStakingContract = new ethers.Contract(SIVER_STAKING_ADDRESS, abi, provider);
     let updatedSilverStakingContract = await silverStakingContract.getStakeInfo(address);
     setAccSilverInterest(
-      ethers.BigNumber.from(updatedSilverStakingContract._rewards.toString())
-        .div(ethers.BigNumber.from(10).pow(18))
-        .toNumber(),
+      +ethers.utils.formatUnits(updatedSilverStakingContract._rewards.toString(), 18),
     );
     updatedSilverStakingContract = updatedSilverStakingContract._tokensStaked.map((item: any) =>
       item.toString(),
@@ -138,9 +131,7 @@ const StakeDashboard: FC = () => {
     const bronzeStakingContract = new ethers.Contract(BRONZE_STAKING_ADDRESS, abi, provider);
     let updatedBronzeStakingContract = await bronzeStakingContract.getStakeInfo(address);
     setAccBronzeInterest(
-      ethers.BigNumber.from(updatedBronzeStakingContract._rewards.toString())
-        .div(ethers.BigNumber.from(10).pow(18))
-        .toNumber(),
+      +ethers.utils.formatUnits(updatedBronzeStakingContract._rewards.toString(), 18),
     );
     console.log(
       "rewardforBronze",
