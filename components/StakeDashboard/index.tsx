@@ -217,7 +217,9 @@ const StakeDashboard: FC = () => {
         // remove those nfts from availableTokens
         availableTokens = availableTokens.filter((item) => {
           const nft = nfts.find(
-            (nft) => +nft.id == +item.metadata.id && nft.assetContractAddress == GOLD_NFT_ADDRESS,
+            (nft) =>
+              +nft.id == +item.metadata.id &&
+              nft.assetContractAddress.toLowerCase() == GOLD_NFT_ADDRESS.toLowerCase(),
           );
           if (!nft?.soldAt) return true;
           return false;
@@ -248,7 +250,9 @@ const StakeDashboard: FC = () => {
         // remove those nfts from availableTokens
         availableTokens = availableTokens.filter((item) => {
           const nft = nfts.find(
-            (nft) => +nft.id == +item.metadata.id && nft.assetContractAddress == SILVER_NFT_ADDRESS,
+            (nft) =>
+              +nft.id == +item.metadata.id &&
+              nft.assetContractAddress.toLowerCase() == SILVER_NFT_ADDRESS.toLowerCase(),
           );
           if (!nft?.soldAt) return true;
           return false;
@@ -288,7 +292,9 @@ const StakeDashboard: FC = () => {
         // remove those nfts from availableTokens
         availableTokens = availableTokens.filter((item) => {
           const nft = nfts.find(
-            (nft) => +nft.id == +item.metadata.id && nft.assetContractAddress == BRONZE_NFT_ADDRESS,
+            (nft) =>
+              +nft.id == +item.metadata.id &&
+              nft.assetContractAddress.toLowerCase() == BRONZE_NFT_ADDRESS.toLowerCase(),
           );
           if (!nft?.soldAt) return true;
           return false;
