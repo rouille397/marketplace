@@ -417,7 +417,7 @@ const StakeDashboard: FC = () => {
                   <>
                     <p className="text-lg font-semibold text-white">Amount Accumulated</p>
                     <span className="text-4xl font-bold text-white block ">
-                      {singleTypeInterestAccrued} CFX
+                      {singleTypeInterestAccrued.toFixed(3)} CFX
                     </span>
                     <button
                       onClick={claimRewardsHandler}
