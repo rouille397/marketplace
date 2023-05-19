@@ -211,28 +211,40 @@ const StakeDashboard: FC = () => {
         // stake gold nft
         // take the first nfts from the array equal to toStakeEntered
         let availableTokens = goldOwnedNfts;
-        // get nfts of user from nfts collection in firestore
+        let availableNFTsFromFirestore = nfts;
 
-        // if nft does not have soldAt field then it is not sold. we dont want to stake it
-        // remove those nfts from availableTokens
-        availableTokens = availableTokens.filter((item) => {
-          const nft = nfts.find(
-            (nft) =>
-              +nft.tokenId == +item.metadata.id &&
-              nft.assetContractAddress.toLowerCase() == GOLD_NFT_ADDRESS.toLowerCase(),
+        console.log("availableTokens", availableTokens);
+        console.log("availableNFTsFromFirestore", availableNFTsFromFirestore);
+
+        // select nfts that are gold
+        let goldNFTsFromFirestore = nfts.filter((item) => {
+          return (
+            item.assetContractAddress.toLowerCase() == GOLD_NFT_ADDRESS.toLowerCase() &&
+            !item.soldAt
           );
-          if (!nft?.soldAt) return true;
-          return false;
+        });
+
+        console.log("goldNFTsFromFirestore", goldNFTsFromFirestore);
+
+        // get nftids from firebase
+
+        let nftIdsFromFirestore = goldNFTsFromFirestore.map((item) => {
+          return +item.tokenId;
+        });
+        console.log("nftIdsFromFirestore", nftIdsFromFirestore);
+
+        // remove nft ids from available tokens
+        availableTokens = availableTokens.filter((item) => {
+          return !nftIdsFromFirestore.includes(+item.metadata.id);
         });
 
         console.log("availableTokens", availableTokens);
-        // if availableTokens length is less than toStakeEntered then return
         if (availableTokens.length < toStakeEntered) {
           alert("You dont have enough nfts to stake or NFTs are listed for sale");
           return;
         }
         // stake the nfts
-        const data = await goldStakeHandler({
+        await goldStakeHandler({
           args: [availableTokens.slice(0, toStakeEntered).map((item) => item.metadata.id)],
         });
         alert("Staked Successfully");
@@ -243,44 +255,44 @@ const StakeDashboard: FC = () => {
           console.info("contract call successs", data);
         }
         if (!silverOwnedNfts) return;
+
         let availableTokens = silverOwnedNfts;
+        let availableNFTsFromFirestore = nfts;
 
-        // get the silver nfts from nfts collection
-        console.log("AllNFTBeforeSilver", nfts);
-        let silverNfts = nfts.filter((item) => {
-          item.name == "SILVER PASS";
+        // select nfts that are silver
+        let silverNFTsFromFirestore = nfts.filter((item) => {
+          return (
+            item.assetContractAddress.toLowerCase() == SILVER_NFT_ADDRESS.toLowerCase() &&
+            !item.soldAt
+          );
         });
-        console.log(
-          "item.assetContractAddress.toLowerCase()",
-          nfts[0].assetContractAddress.toLowerCase(),
-        );
-        console.log("SILVER_NFT_ADDRESS", SILVER_NFT_ADDRESS);
 
-        console.log("silverNftstest", silverNfts);
-        // remove the nfts that are sold, they have soldAt field
-        silverNfts = silverNfts.filter((item) => !item.soldAt);
-        console.log("silverNftsThatare not sold test", silverNfts);
-        // get the tokenId of the silver nfts
-        const silverNftsTokenIds = silverNfts.map((item) => +item.tokenId);
-        console.log("silverNftsTokenIds", silverNftsTokenIds);
+        console.log("silverNFTsFromFirestore", silverNFTsFromFirestore);
 
-        // remove the nfts from availableTokens that have metadata.id present in silverNftsTokenIds
+        // get nftids from firebase
+
+        let nftIdsFromFirestore = silverNFTsFromFirestore.map((item) => {
+          return +item.tokenId;
+        });
+        console.log("nftIdsFromFirestore", nftIdsFromFirestore);
+
+        // remove nft ids from available tokens
         availableTokens = availableTokens.filter((item) => {
-          if (silverNftsTokenIds.includes(+item.metadata.id)) return false;
-          return true;
+          return !nftIdsFromFirestore.includes(+item.metadata.id);
         });
-        console.log("availableTokensforstaking", availableTokens);
-        // if availableTokens length is less than toStakeEntered then return
+
+        console.log("availableTokens", availableTokens);
         if (availableTokens.length < toStakeEntered) {
           alert("You dont have enough nfts to stake or NFTs are listed for sale");
           return;
         }
-
+        // stake the nfts
         await silverStakeHandler({
           args: [availableTokens.slice(0, toStakeEntered).map((item) => item.metadata.id)],
         });
         alert("Staked Successfully");
       }
+
       if (selectedNft === "bronze") {
         if (!bronzeNftRead) {
           const data = await setApprovalForAllBronze({ args: [BRONZE_STAKING_ADDRESS, true] });
@@ -289,37 +301,38 @@ const StakeDashboard: FC = () => {
         if (!bronzeOwnedNfts) return;
 
         let availableTokens = bronzeOwnedNfts;
-        // get nfts of user from nfts collection in firestore
+        let availableNFTsFromFirestore = nfts;
 
-        // if nft does not have soldAt field then it is not sold. we dont want to stake it
-        // remove those nfts from availableTokens
-        availableTokens = availableTokens.filter((item) => {
-          const nft = nfts.find(
-            (nft) =>
-              +nft.tokenId == +item.metadata.id &&
-              nft.assetContractAddress.toLowerCase() == BRONZE_NFT_ADDRESS.toLowerCase(),
+        // select nfts that are bronze
+        let bronzeNFTsFromFirestore = nfts.filter((item) => {
+          return (
+            item.assetContractAddress.toLowerCase() == BRONZE_NFT_ADDRESS.toLowerCase() &&
+            !item.soldAt
           );
-          if (!nft?.soldAt) return true;
-          return false;
+        });
+
+        console.log("bronzeNFTsFromFirestore", bronzeNFTsFromFirestore);
+
+        // get nftids from firebase
+
+        let nftIdsFromFirestore = bronzeNFTsFromFirestore.map((item) => {
+          return +item.tokenId;
+        });
+        console.log("nftIdsFromFirestore", nftIdsFromFirestore);
+
+        // remove nft ids from available tokens
+        availableTokens = availableTokens.filter((item) => {
+          return !nftIdsFromFirestore.includes(+item.metadata.id);
         });
 
         console.log("availableTokens", availableTokens);
-
-        // if availableTokens length is less than toStakeEntered then return
         if (availableTokens.length < toStakeEntered) {
           alert("You dont have enough nfts to stake or NFTs are listed for sale");
           return;
         }
-
-        // stake bronze nft
-        // take the first nfts from the array equal to toStakeEntered
-        console.info(
-          "contract call successs",
-          bronzeOwnedNfts.slice(0, toStakeEntered).map((item) => item.metadata.id),
-        );
-
-        const data = await bronzeStakeHandler({
-          args: [bronzeOwnedNfts.slice(0, toStakeEntered).map((item) => item.metadata.id)],
+        // stake the nfts
+        await bronzeStakeHandler({
+          args: [availableTokens.slice(0, toStakeEntered).map((item) => item.metadata.id)],
         });
         alert("Staked Successfully");
       }
