@@ -245,33 +245,32 @@ const StakeDashboard: FC = () => {
         if (!silverOwnedNfts) return;
         let availableTokens = silverOwnedNfts;
 
-        // remove the nfts from availableTokens that have same metadata.id as the nfts in nfts collection in firestore and the assetContractAddress is silver nft address
-        availableTokens = availableTokens.filter((item) => {
-          const nft = nfts.find(
-            (nft) =>
-              +nft.tokenId == +item.metadata.id &&
-              nft.assetContractAddress.toLowerCase() == SILVER_NFT_ADDRESS.toLowerCase(),
-          );
-          if (nft && !nft?.soldAt) return true;
-          return false;
+        // get the silver nfts from nfts collection
+        let silverNfts = nfts.filter((item) => {
+          item.assetContractAddress.toLowerCase() == SILVER_NFT_ADDRESS.toLowerCase();
         });
+        console.log("silverNftstest", silverNfts);
+        // remove the nfts that are sold, they have soldAt field
+        silverNfts = silverNfts.filter((item) => !item.soldAt);
+        console.log("silverNftsThatare not sold test", silverNfts);
+        // get the tokenId of the silver nfts
+        const silverNftsTokenIds = silverNfts.map((item) => +item.tokenId);
+        console.log("silverNftsTokenIds", silverNftsTokenIds);
+
+        // remove the nfts from availableTokens that have metadata.id present in silverNftsTokenIds
+        availableTokens = availableTokens.filter((item) => {
+          if (silverNftsTokenIds.includes(+item.metadata.id)) return false;
+          return true;
+        });
+        console.log("availableTokensforstaking", availableTokens);
+        // if availableTokens length is less than toStakeEntered then return
         if (availableTokens.length < toStakeEntered) {
           alert("You dont have enough nfts to stake or NFTs are listed for sale");
           return;
         }
-        console.log("availableTokensleft", availableTokens);
-        console.log("silverContract", silverStakingContract);
-        console.log("nfts", nfts);
-
-        // stake silver nft
-        // take the first nfts from the array equal to toStakeEntered
-        console.info(
-          "contract call successs",
-          silverOwnedNfts.slice(0, toStakeEntered).map((item) => item.metadata.id),
-        );
 
         await silverStakeHandler({
-          args: [silverOwnedNfts.slice(0, toStakeEntered).map((item) => item.metadata.id)],
+          args: [availableTokens.slice(0, toStakeEntered).map((item) => item.metadata.id)],
         });
         alert("Staked Successfully");
       }
