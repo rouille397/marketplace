@@ -142,20 +142,16 @@ const StakeDashboard: FC = () => {
         .div(ethers.BigNumber.from(10).pow(18))
         .toNumber(),
     );
+    console.log("rewardforBronze", updatedBronzeStakingContract._rewards.toString());
     updatedBronzeStakingContract = updatedBronzeStakingContract._tokensStaked.map((item: any) =>
       item.toString(),
     );
     setBronzeStakeInfo(updatedBronzeStakingContract);
-    console.log(
-      "updatedGoldStakingContract",
-      updatedGoldStakingContract,
-      updatedSilverStakingContract,
-      updatedBronzeStakingContract,
-    );
   };
 
   useEffect(() => {
     if (!provider || !address) return;
+
     getStakeInfoHandler();
   }, [provider, address]);
 
