@@ -142,7 +142,10 @@ const StakeDashboard: FC = () => {
         .div(ethers.BigNumber.from(10).pow(18))
         .toNumber(),
     );
-    console.log("rewardforBronze", updatedBronzeStakingContract._rewards.toString());
+    console.log(
+      "rewardforBronze",
+      ethers.utils.formatUnits(updatedBronzeStakingContract._rewards.toString(), 18),
+    );
     updatedBronzeStakingContract = updatedBronzeStakingContract._tokensStaked.map((item: any) =>
       item.toString(),
     );
