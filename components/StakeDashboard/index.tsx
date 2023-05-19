@@ -249,6 +249,12 @@ const StakeDashboard: FC = () => {
         let silverNfts = nfts.filter((item) => {
           item.assetContractAddress.toLowerCase() == SILVER_NFT_ADDRESS.toLowerCase();
         });
+        console.log(
+          "item.assetContractAddress.toLowerCase()",
+          nfts[0].assetContractAddress.toLowerCase(),
+        );
+        console.log("SILVER_NFT_ADDRESS", SILVER_NFT_ADDRESS);
+
         console.log("silverNftstest", silverNfts);
         // remove the nfts that are sold, they have soldAt field
         silverNfts = silverNfts.filter((item) => !item.soldAt);
