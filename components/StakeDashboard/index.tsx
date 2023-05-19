@@ -218,7 +218,7 @@ const StakeDashboard: FC = () => {
         availableTokens = availableTokens.filter((item) => {
           const nft = nfts.find(
             (nft) =>
-              +nft.id == +item.metadata.id &&
+              +nft.tokenId == +item.metadata.id &&
               nft.assetContractAddress.toLowerCase() == GOLD_NFT_ADDRESS.toLowerCase(),
           );
           if (!nft?.soldAt) return true;
@@ -251,7 +251,7 @@ const StakeDashboard: FC = () => {
         availableTokens = availableTokens.filter((item) => {
           const nft = nfts.find(
             (nft) =>
-              +nft.id == +item.metadata.id &&
+              +nft.tokenId == +item.metadata.id &&
               nft.assetContractAddress.toLowerCase() == SILVER_NFT_ADDRESS.toLowerCase(),
           );
           if (!nft?.soldAt) return true;
@@ -293,7 +293,7 @@ const StakeDashboard: FC = () => {
         availableTokens = availableTokens.filter((item) => {
           const nft = nfts.find(
             (nft) =>
-              +nft.id == +item.metadata.id &&
+              +nft.tokenId == +item.metadata.id &&
               nft.assetContractAddress.toLowerCase() == BRONZE_NFT_ADDRESS.toLowerCase(),
           );
           if (!nft?.soldAt) return true;
