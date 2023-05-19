@@ -112,7 +112,9 @@ const StakeDashboard: FC = () => {
   const getStakeInfoHandler = async () => {
     const goldStakingContract = new ethers.Contract(GOLD_STAKING_ADDRESS, abi, provider);
     let updatedGoldStakingContract = await goldStakingContract.getStakeInfo(address);
-    setAccGoldInterest(+ethers.BigNumber.from(updatedGoldStakingContract._rewards.toString()));
+    setAccGoldInterest(
+      +ethers.utils.formatUnits(updatedGoldStakingContract._rewards.toString(), 18),
+    );
     updatedGoldStakingContract = updatedGoldStakingContract._tokensStaked.map((item: any) =>
       item.toString(),
     );
