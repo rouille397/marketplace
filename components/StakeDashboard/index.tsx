@@ -244,23 +244,17 @@ const StakeDashboard: FC = () => {
         }
         if (!silverOwnedNfts) return;
         let availableTokens = silverOwnedNfts;
-        // get nfts of user from nfts collection in firestore
 
-        // if nft does not have soldAt field then it is not sold. we dont want to stake it
-        // remove those nfts from availableTokens
+        // remove the nfts from availableTokens that have same metadata.id as the nfts in nfts collection in firestore and the assetContractAddress is silver nft address
         availableTokens = availableTokens.filter((item) => {
           const nft = nfts.find(
             (nft) =>
               +nft.tokenId == +item.metadata.id &&
               nft.assetContractAddress.toLowerCase() == SILVER_NFT_ADDRESS.toLowerCase(),
           );
-          if (!nft?.soldAt) return true;
+          if (nft && !nft?.soldAt) return true;
           return false;
         });
-
-        console.log("availableTokens", availableTokens);
-
-        // if availableTokens length is less than toStakeEntered then return
         if (availableTokens.length < toStakeEntered) {
           alert("You dont have enough nfts to stake or NFTs are listed for sale");
           return;
@@ -273,7 +267,7 @@ const StakeDashboard: FC = () => {
           silverOwnedNfts.slice(0, toStakeEntered).map((item) => item.metadata.id),
         );
 
-        const data = await silverStakeHandler({
+        await silverStakeHandler({
           args: [silverOwnedNfts.slice(0, toStakeEntered).map((item) => item.metadata.id)],
         });
         alert("Staked Successfully");
