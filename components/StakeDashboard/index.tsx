@@ -246,6 +246,7 @@ const StakeDashboard: FC = () => {
         let availableTokens = silverOwnedNfts;
 
         // get the silver nfts from nfts collection
+        console.log("AllNFTBeforeSilver", nfts);
         let silverNfts = nfts.filter((item) => {
           item.name == "SILVER PASS";
         });
