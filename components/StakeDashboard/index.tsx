@@ -247,7 +247,7 @@ const StakeDashboard: FC = () => {
 
         // get the silver nfts from nfts collection
         let silverNfts = nfts.filter((item) => {
-          item.assetContractAddress.toLowerCase() == SILVER_NFT_ADDRESS.toLowerCase();
+          item.name == "SILVER PASS";
         });
         console.log(
           "item.assetContractAddress.toLowerCase()",
