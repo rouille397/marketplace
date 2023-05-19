@@ -259,6 +259,9 @@ const StakeDashboard: FC = () => {
           alert("You dont have enough nfts to stake or NFTs are listed for sale");
           return;
         }
+        console.log("availableTokensleft", availableTokens);
+        console.log("silverContract", silverStakingContract);
+        console.log("nfts", nfts);
 
         // stake silver nft
         // take the first nfts from the array equal to toStakeEntered
