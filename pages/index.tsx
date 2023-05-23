@@ -10,14 +10,7 @@ import circleIcon from "../public/images/circle.svg";
 import NftStep from "../components/NftStep";
 import { CATEGORIES, NFT_STEPS } from "../constants";
 
-import {
-  query,
-  where,
-  collection,
-  getDocs,
-  limit,
-  orderBy,
-} from "firebase/firestore";
+import { query, where, collection, getDocs, limit, orderBy } from "firebase/firestore";
 import { db } from "@/helpers/firebase-config";
 import Link from "next/link";
 import Contact from "@/components/Contact";
@@ -51,12 +44,7 @@ export default function Home() {
       setRecentlySoldLoading(true);
       // get nfts from nfts collection in firebase where soldAt exists, get them in descending order
       const nftsRef = collection(db, "nfts");
-      const q = query(
-        nftsRef,
-        where("soldAt", "!=", null),
-        orderBy("soldAt", "desc"),
-        limit(20)
-      );
+      const q = query(nftsRef, where("soldAt", "!=", null), orderBy("soldAt", "desc"), limit(20));
       const querySnapshot = await getDocs(q);
       const nfts = querySnapshot.docs.map((doc) => doc.data());
       console.log("nftssoldout", nfts);
@@ -86,7 +74,7 @@ export default function Home() {
           collectionRef,
           where("category", "==", selectedType),
           orderBy("buyoutPricePerToken", "asc"),
-          limit(10)
+          limit(10),
         );
         const collectionSnapshot = await getDocs(q);
         const collectionList = collectionSnapshot.docs.map((doc) => ({
@@ -103,10 +91,7 @@ export default function Home() {
       <Head>
         <title>Nitfee Marketplace</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <meta
-          name="description"
-          content="List Your NFTs For Sale, Accept Bids, and Buy NFTs"
-        />
+        <meta name="description" content="List Your NFTs For Sale, Accept Bids, and Buy NFTs" />
         <meta
           name="keywords"
           content="Thirdweb, Marketplace, NFT Marketplace Tutorial, NFT Auction Tutorial, How To Make OpenSea"
@@ -156,9 +141,7 @@ export default function Home() {
                 type="rounded"
                 className="md:w-auto"
                 onClick={() => {
-                  category == "All"
-                    ? setSelectedType(null)
-                    : setSelectedType(category);
+                  category == "All" ? setSelectedType(null) : setSelectedType(category);
                 }}
               >
                 {category}
@@ -170,12 +153,10 @@ export default function Home() {
             <Loading isLoading={allCollectionLoading} />
           ) : (
             // show first 8 collections in grid view, large screen has 4 columns and small screen has 2 columns
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:h-[450px]">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:min-h-[450px]">
               {allCollectionsData?.map((collection: any, index: any) => {
                 return (
-                  <Link
-                    href={`/collection/${collection?.collectionAddress?.toLowerCase()}`}
-                  >
+                  <Link href={`/collection/${collection?.collectionAddress?.toLowerCase()}`}>
                     <div className="rounded-lg w-full h-full group cursor-pointer relative">
                       <img
                         src={collection?.image}
@@ -184,9 +165,7 @@ export default function Home() {
                       />
                       <div className="absolute bottom-0 left-0 w-full h-full bg-gradient-to-t from-black to-transparent hidden justify-center items-center group-hover:flex cursor-pointer">
                         <div className="text-center">
-                          <p className="font-semibold md:text-2xl text-base ">
-                            {collection?.name}
-                          </p>
+                          <p className="font-semibold md:text-2xl text-base ">{collection?.name}</p>
                           <p className="text-white md:text-[18px] text-sm font-semibold">
                             {collection.listingCount} Listings
                           </p>
@@ -204,7 +183,7 @@ export default function Home() {
           )}
           {/* TODO change it */}
           {!allCollectionLoading && allCollectionsData.length > 3 && (
-            <div className="text-center 2xl:mt-[500px]  xl:mt-60 lg:mt-40  mt-12">
+            <div className="text-center 2xl:mt-[100px]  xl:mt-32 lg:mt-8  mt-12">
               <Link href="/collection/all">
                 <Button type="rounded">View More</Button>
               </Link>
