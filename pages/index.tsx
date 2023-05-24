@@ -73,7 +73,6 @@ export default function Home() {
         const q = query(
           collectionRef,
           where("category", "==", selectedType),
-          orderBy("buyoutPricePerToken", "asc"),
           limit(10),
         );
         const collectionSnapshot = await getDocs(q);
