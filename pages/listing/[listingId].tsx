@@ -408,6 +408,7 @@ const ListingPage: NextPage = () => {
   const transferToBuyerHandler = async () => {
     try {
       const tx = await contract.auction.closeListing(listingId, winnerAddress);
+      const tx = await contract.auction.closeListing(listingId, address);
 
       console.log("NFT sold successfuly");
 
