@@ -356,8 +356,7 @@ const Create = () => {
             Direct Listing
           </Button>
           <Button
-            disabled
-           // onClick={() => setActive("auctionList")}
+            onClick={() => setActive("auctionList")}
             type={active === "auctionList" ? "square" : "transparent"}
           >
             Auction Listing
