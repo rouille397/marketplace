@@ -19,6 +19,7 @@ export let GOLD_NFT_ADDRESS = "0xfbfaeb8c227b9c944481ebbe3a872d41ec14f959";
 export let BRONZE_NFT_ADDRESS = "0xa71219cf202641d88f565b63a4025044707cb80a";
 export let SILVER_NFT_ADDRESS = "0xcee920e735d48d3f54259cec0c59b6fcfff754d1";
 //
+export const wrappedConfluxAddr = "0x14b2d3bc65e74dae1030eafd8ac30c533c976a9b";
 
 
 // production marketplace addr = 0x2E4A0d0A0deD36b878Fa6BD56a5d537a682e4991
