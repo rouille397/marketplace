@@ -1,64 +1,80 @@
-import React, { useState } from "react";
-import Button from "../components/Button";
+import React, { useEffect, useState } from "react";
 import stakeHandImage from "../public/images/stake-hand-img.png";
-import lightningHand from "../public/images/lightning-hand.png";
 import Image from "next/image";
 import styles from "../styles/Dashboard.module.css";
-import NftCard from "@/components/NftCard";
 import StakeDashboard from "@/components/StakeDashboard";
-import {
-  useAddress,
-  useContract,
-  useContractRead,
-  useContractWrite,
-  useOwnedNFTs,
-} from "@thirdweb-dev/react";
-import {
-  BRONZE_NFT_ADDRESS,
-  GOLD_NFT_ADDRESS,
-  GOLD_STAKING_ADDRESS,
-  SILVER_NFT_ADDRESS,
-} from "@/addresses";
-
-const stakeCategories = ["stake", "un-stake", "claim", "un-claimed points"];
+import { ethers } from "ethers";
+import { useAddress, useSigner } from "@thirdweb-dev/react";
+import { wrappedConfluxAddr } from "@/addresses";
 
 export default function Dashboard() {
-  console.log("GOLD_STAKING_ADDRESS", GOLD_STAKING_ADDRESS);
+  const [exchangeInput, setExchangeInput] = useState("");
+  const [balance, setBalance] = useState(0);
+  const address = useAddress();
+  const signer = useSigner();
+  const provider = signer?.provider;
 
-  // const approveFOrAll = async () => {
-  //   try {
-  //     const data = await setApprovalForAll({
-  //       args: [GOLD_STAKING_ADDRESS, true],
-  //     });
-  //     console.info("contract call successs", data);
-  //   } catch (err) {
-  //     console.error("contract call failure", err);
-  //   }
-  // };
+  useEffect(() => {
+    const getBalance = async () => {
+      const wcfxContract = new ethers.Contract(
+        wrappedConfluxAddr,
+        [
+          {
+            constant: true,
+            inputs: [{ name: "", type: "address" }],
+            name: "balanceOf",
+            outputs: [{ name: "", type: "uint256" }],
+            payable: false,
+            stateMutability: "view",
+            type: "function",
+          },
+        ],
+        provider,
+      );
+      const result = await wcfxContract.balanceOf(address);
+      setBalance(result.toString());
+      console.log("balance", result.toString());
+    };
+    try {
+      getBalance();
+    } catch (e) {
+      console.log(e);
+    }
+  }, []);
 
-  // const stakeHandler = async () => {
-  //   console.info("contract call", contract);
-  //   try {
-  //     const data = await stake({ args: [["30"]] });
-  //     console.info("contract call successs", data);
-  //   } catch (err) {
-  //     console.error("contract call failure", err);
-  //   }
-  // };
+  const convertToCFXHandler = async () => {
+    if (!exchangeInput) {
+      alert("Please enter amount");
+      return;
+    }
+    if (+balance < +exchangeInput) {
+      alert("Insufficient balance");
+      return;
+    }
+    const wcfxContract = new ethers.Contract(
+      wrappedConfluxAddr,
+      [
+        {
+          constant: false,
+          inputs: [{ name: "wad", type: "uint256" }],
+          name: "withdraw",
+          outputs: [],
+          payable: false,
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+      ],
+      signer,
+    );
+    const res = await wcfxContract.withdraw(+exchangeInput);
+    console.log("res", res);
+    if (res) {
+      alert("Successfully converted to CFX");
+    }
+  };
 
   return (
     <React.Fragment>
-      {/* {!isAlreadyApproved ? (
-        <button className="px-5 py-3 mt-20 bg-red-400" onClick={approveFOrAll}>
-          approve for all
-        </button>
-      ) : (
-        <button className="px-5 py-3 mt-20 bg-red-400" onClick={stakeHandler}>
-          STAKE
-        </button>
-      )} */}
-
-      {/* hero */}
       <div className="flex flex-col overflow-hidden justify-center bg-[url('/images/stake-hero-img.png')] bg-cover min-[1440px]:bg-cover bg-no-repeat h-[700px] lg:h-[884px] xl:min-h-[884px] lg:px-48 px-4 relative">
         <div
           className={`absolute w-[803px] h-[600px] left-[100px] lg:left-[329px] ${styles.heroShadow}`}
@@ -84,37 +100,7 @@ export default function Dashboard() {
           today.
         </h2>
       </div>
-      {/* stake categories */}
-      {/* <div className="flex justify-start lg:justify-center items-center gap-5 md:mb-24 mb-12 overflow-x-scroll mt-12 md:mt-20 px-4">
-        {stakeCategories?.map((category, index) =>
-          index === stakeCategories.length - 1 ? (
-            <Button
-              key={index}
-              type="rounded"
-              className="whitespace-nowrap flex items-center gap-4 uppercase"
-              onClick={() => {
-                category === "stake" ? setSelectedType(null) : setSelectedType(category);
-              }}
-            >
-              {category}
-              <span className={`w-[269px] h-2 ${styles.progressBar}`}></span>
-              <span className="pr-10">699</span>
-            </Button>
-          ) : (
-            <Button
-              key={index}
-              type="rounded"
-              className="uppercase w-[168px]"
-              onClick={() => {
-                category === "stake" ? setSelectedType(null) : setSelectedType(category);
-              }}
-            >
-              {category}
-            </Button>
-          ),
-        )}
-      </div> */}
-      {/* stake insights */}
+
       <StakeDashboard />
 
       {/* Burn tokens */}
@@ -124,15 +110,24 @@ export default function Dashboard() {
           <h2 className="uppercase text-2xl md:text-4xl md:relative md:z-[7] text-bold">
             Exchange WCFX/CFX
           </h2>
-          {/* <button className="stake-btn text-[#141B22] md:relative md:z-[7] text-base font-semibold py-3 px-6 rounded-lg uppercase">
-            convert to points
-          </button> */}
-          <p className="text-base font-normal md:relative md:z-[7]">
-            {/* In the next chapter, your treasured $INFKT tokens transform into points, amplifying your
-            power and influence. This conversion opens doors to exclusive experiences, granting you
-            access to uncharted territories and hidden treasures within the INFKTED ecosystem.. */}
-            Here you will be able to exchange your rewarded WCFX to CFX. This feature is coming soon
-          </p>
+          <div className="flex justify-center relative z-50 gap-5">
+            <div className="flex-1 max-w-[300px]">
+              <input
+                value={exchangeInput}
+                type="number"
+                onChange={(e) => setExchangeInput(e.target.value)}
+                className="flex-1 py-2.5 rounded w-full px-2 text-black"
+                placeholder="Enter WCFX amount"
+              />
+              <p className="text-left">Balance: {+balance}CFX</p>
+            </div>
+            <button
+              onClick={convertToCFXHandler}
+              className="stake-btn text-white md:relative md:z-[7] text-base font-semibold py-3 px-6 rounded-lg uppercase max-h-11"
+            >
+              convert to CFX
+            </button>
+          </div>
         </div>
       </section>
     </React.Fragment>
