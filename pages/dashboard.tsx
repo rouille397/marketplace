@@ -14,33 +14,35 @@ export default function Dashboard() {
   const signer = useSigner();
   const provider = signer?.provider;
 
+  const getBalance = async () => {
+    const wcfxContract = new ethers.Contract(
+      wrappedConfluxAddr,
+      [
+        {
+          constant: true,
+          inputs: [{ name: "", type: "address" }],
+          name: "balanceOf",
+          outputs: [{ name: "", type: "uint256" }],
+          payable: false,
+          stateMutability: "view",
+          type: "function",
+        },
+      ],
+      provider,
+    );
+    const result = await wcfxContract.balanceOf(address);
+    setBalance(+(result.toString() / 10 ** 18).toFixed(4));
+    console.log("balance", result.toString());
+  };
+
   useEffect(() => {
-    const getBalance = async () => {
-      const wcfxContract = new ethers.Contract(
-        wrappedConfluxAddr,
-        [
-          {
-            constant: true,
-            inputs: [{ name: "", type: "address" }],
-            name: "balanceOf",
-            outputs: [{ name: "", type: "uint256" }],
-            payable: false,
-            stateMutability: "view",
-            type: "function",
-          },
-        ],
-        provider,
-      );
-      const result = await wcfxContract.balanceOf(address);
-      setBalance(result.toString());
-      console.log("balance", result.toString());
-    };
+    if (!address) return;
     try {
       getBalance();
     } catch (e) {
       console.log(e);
     }
-  }, []);
+  }, [address]);
 
   const convertToCFXHandler = async () => {
     if (!exchangeInput) {
@@ -66,11 +68,14 @@ export default function Dashboard() {
       ],
       signer,
     );
-    const res = await wcfxContract.withdraw(+exchangeInput);
+    const res = await wcfxContract.withdraw(ethers.utils.parseEther(exchangeInput));
+    await res.wait();
+
     console.log("res", res);
     if (res) {
       alert("Successfully converted to CFX");
     }
+    await getBalance();
   };
 
   return (
